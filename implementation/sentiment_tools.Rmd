@@ -1,0 +1,163 @@
+---
+title: "Comparison of Sentiment Tools across Domains"
+output: html_notebook
+---
+
+Hint:
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+# load required libraries
+
+# to use harry potter dataset
+# devtools::install_github("bradleyboehmke/harrypotter")
+
+library(quanteda)
+library(readtext)
+library(corpus)
+library(tidyverse)
+library(stringr)
+library(tidytext)
+library(harrypotter)
+library(janeaustenr)
+library(dplyr)
+
+```
+
+```{r}
+daten.sherlock <- readtext("daten/sherlock/romane/*.txt")
+daten.sherlock$doc_id <- str_sub(daten.sherlock$doc_id, start = 4, end = -5)
+korpus <- corpus(daten.sherlock, docid_field = "doc_id")
+docvars(korpus, "Textnummer") <- 1:12
+korpus
+```
+```{r}
+korpus.stats <- summary(korpus)
+korpus.stats$Text <- reorder(korpus.stats$Text, 1:12, order = T)
+korpus.stats
+```
+```{r}
+# load afinn lexicon
+
+# manually -> convert to binary lexicon
+afinn_dict <- read.csv("lexika/AFINN-111.txt", header = F, sep = "\t", stringsAsFactors = F)
+afinn_binary <- dictionary(list(positive = afinn_dict$V1[afinn_dict$V2>0], negative = afinn_dict$V1[afinn_dict$V2<0]))
+
+# provided via tidytext?
+afinn <- get_sentiments("afinn")
+
+```
+
+```{r}
+dfm.sentiment <- dfm(korpus, dictionary = afinn_binary)
+
+dfm.sentiment
+```
+# Harry Potter - Dataset
+```{r}
+# load harry potter dataset 
+titles <- c("Philosopher's Stone", "Chamber of Secrets", "Prisoner of Azkaban",
+            "Goblet of Fire", "Order of the Phoenix", "Half-Blood Prince",
+            "Deathly Hallows")
+
+books <- list(philosophers_stone, chamber_of_secrets, prisoner_of_azkaban,
+           goblet_of_fire, order_of_the_phoenix, half_blood_prince,
+           deathly_hallows)
+  
+series <- tibble()
+
+for(i in seq_along(titles)) {
+        
+        clean <- tibble(chapter = seq_along(books[[i]]),
+                        text = books[[i]]) %>%
+             unnest_tokens(word, text) %>%
+             mutate(book = titles[i]) %>%
+             select(book, everything())
+
+        series <- rbind(series, clean)
+}
+
+series$book <- factor(series$book, levels = rev(titles))
+
+series
+```
+
+### Harry Potter - AFINN Lexicon
+```{r}
+afinn_hp1 <- series %>%
+        group_by(book) %>% 
+        mutate(word_count = 1:n(),
+               index = word_count %/% 500 + 1) %>% 
+        inner_join(get_sentiments("afinn")) %>%
+        group_by(book, index, chapter) %>%
+        summarise(sentiment = sum(value)) %>%
+        mutate(method = "AFINN")
+
+afinn_hp1
+```
+
+```{r}
+afinn_hp2 <- series %>%
+        group_by(book, chapter) %>% # add word for single word scores 
+        inner_join(get_sentiments("afinn")) %>%
+        group_by(book, chapter) %>% # add word for single word scores
+        #summarise(sentiment = sum(value)) %>%
+        summarise(sentiment = mean(value, na.rm = TRUE)) %>%
+        mutate(method = "AFINN")  %>%
+        ggplot(aes(chapter, sentiment, fill = book)) +
+          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+          facet_wrap(~ book, ncol = 2, scales = "free_x")
+
+afinn_hp2
+
+#ggsave(plot = afinn, width = 15, height = 15, dpi = 300, filename = "afinn_hp_mean.png")
+```
+
+# Jane Austen - Dataset
+```{r}
+tidy_books <- austen_books() %>%
+  group_by(book) %>%
+  mutate(
+    linenumber = row_number(),
+    chapter = cumsum(str_detect(text, 
+                                regex("^chapter [\\divxlc]", 
+                                      ignore_case = TRUE)))) %>%
+  ungroup() %>%
+  unnest_tokens(word, text)
+```
+```{r}
+pride_prejudice <- tidy_books %>% 
+  filter(book == "Pride & Prejudice")
+```
+
+### Jane Austen - AFINN Lexicon
+```{r}
+afinn <- pride_prejudice %>% 
+  inner_join(get_sentiments("afinn")) %>% 
+  group_by(index = linenumber %/% 80) %>% 
+  summarise(sentiment = sum(value)) %>% 
+  mutate(method = "AFINN")
+```
+
+# Lexicoder Sentiment Dictionary
+```{r}
+require(quanteda)
+require(quanteda.corpora)
+```
+
+```{r}
+# tokenize corpus
+hp1_tokenized <- tokens(philosophers_stone[1], remove_punct = TRUE)
+```
+
+```{r}
+# select only the "negative" and "positive" categories
+data_dictionary_LSD2015_pos_neg <- data_dictionary_LSD2015[1:2]
+
+toks_gov_lsd <- tokens_lookup(toks_gov, dictionary = data_dictionary_LSD2015_pos_neg)
+
+# create a document document-feature matrix and group it by day
+dfmat_gov_lsd <- dfm(toks_gov_lsd) %>% 
+  dfm_group(groups = date)
+```
+
