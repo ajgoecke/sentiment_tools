@@ -320,6 +320,100 @@ plot <- ggplot(series, aes(chapter, lsd, fill = book)) + # plot sentiment of boo
 plot 
 ```
 
+# REAL DATASET
+```{r}
+reviews <- readtext("datasets/goodreads_reviews_children_2.json", text_field = "review_text")
+reviews.df <- as.data.frame(reviews)
+reviews.df$doc_id <- 1:nrow(reviews.df)
+
+
+reviews.df
+
+# get random sample of 50 reviews 
+reviews_sample <- reviews.df[sample(1:nrow(reviews.df), 50,
+   replace=FALSE),]
+
+# get first 50 rows of data 
+reviews_50 <- head(reviews.df,50)
+
+reviews_50
+```
+
+# Perform SA on Reviews
+```{r}
+# Afinn
+# tokenize 
+reviews_tokenized <- reviews_50 %>%
+  unnest_tokens(tokens, text)
+
+# apply afinn lexicon
+reviews_tokenized$afinn2 <- textstat_valence(reviews_tokenized$tokens, afinn2)$sentiment
+
+# replace all 0 values with na
+reviews_tokenized[reviews_tokenized == 0] <- NA
+
+reviews_tokenized %>%
+  group_by(doc_id) %>% # group df by book and chapter to get sentiment per chapter
+  #reviews_tokenized$sentiment = mean(afinn2, na.rm = TRUE) %>%
+  summarise(sentiment = mean(afinn2, na.rm = TRUE)) %>% # calculate mean w/o regarding na values
+  mutate(method = "AFINN") %>% # add column with method 
+        ggplot(aes(doc_id, sentiment, fill = doc_id)) + # plot sentiment of books
+          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+          #facet_wrap(~ doc_id, ncol = 2, scales = "free_x") +
+          ggtitle("AFINN Reviews")
+
+#reviews_tokenized %>% 
+ # group_by(doc_id) %>%
+  #summarise(afinn_sentiment = mean(afinn2, na.rm=TRUE)) %>%
+ # summarise(lsd_sentiment = mean(lsd, na.rm=TRUE))
+
+
+
+```
+
+```{r}
+# apply lexicoder lexicon
+reviews_50$lsd <- textstat_polarity(tokens(reviews_50$text), data_dictionary_LSD2015)$sentiment 
+
+#series.df <- as.data.frame(series)
+
+plot <- ggplot(reviews_50, aes(doc_id, lsd, fill = doc_id)) + # plot sentiment of books
+          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+          #facet_wrap(~ doc_id, ncol = 2, scales = "free_x") +
+          ggtitle("Lexicoder Reviews")
+plot 
+```
+
+```{r}
+reviews_50$vader <- vader_df(reviews_50$text)$compound
+
+
+plot <- ggplot(reviews_50, aes(doc_id, vader, fill = doc_id)) + # plot sentiment of books
+          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+          #facet_wrap(~ doc_id, ncol = 2, scales = "free_x") +
+          ggtitle("Vader Reviews")
+plot 
+```
+
+```{r}
+reviews <- readtext("datasets/goodreads_reviews_children_2.json", text_field = "review_text")
+reviews.corpus <- corpus(reviews)
+
+docvars(reviews.corpus, "language") <- textcat(reviews.corpus)
+
+reviews_en <- corpus_subset(reviews.corpus, language == "english", drop_docid = TRUE)
+```
+
+```{r}
+reviews_en
+```
+
+```{r}
+reviews.df$language <- textcat(reviews.df$text)
+
+reviews.df
+```
+
 
 
 
