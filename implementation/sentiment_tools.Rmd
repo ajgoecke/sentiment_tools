@@ -28,6 +28,11 @@ library(dplyr)
 library(quanteda.sentiment)
 library(vader)
 
+
+require(quanteda)
+require(quanteda.corpora)
+require(quanteda.sentiment)
+
 ```
 
 ```{r}
@@ -152,11 +157,6 @@ print(data_dictionary_AFINN, max_nval = 8)
 ```
 
 # Lexicoder Sentiment Dictionary
-```{r}
-require(quanteda)
-require(quanteda.corpora)
-require(quanteda.sentiment)
-```
 
 ```{r}
 # tokenize hp1
@@ -170,7 +170,7 @@ hp1_tokenized <- tokens_tolower(tokens(philosophers_stone, remove_punct = TRUE))
 ```
 
 ```{r}
-hp1_tokenized[[1]]
+#hp1_tokenized[[1]]
 ```
 
 ```{r}
@@ -224,8 +224,7 @@ plot + ylim(-1.0, 1.0) + labs(y="sentiment", x = "chapter") + ggtitle("HP1 - AFI
 get_vader(philosophers_stone[1])
 
 hp1_vader <- vader_df(philosophers_stone)
-```
-```{r}
+
 hp1_vader
 
 
@@ -278,6 +277,40 @@ series_tokenized %>%
 # apply lexicoder lexicon
 series$lsd <- textstat_polarity(tokens(series$text), data_dictionary_LSD2015)$sentiment 
 
+#series.df <- as.data.frame(series)
+
+plot <- ggplot(series, aes(chapter, lsd, fill = book)) + # plot sentiment of books
+          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+          facet_wrap(~ book, ncol = 2, scales = "free_x") +
+          ggtitle("Lexicoder HP")
+plot 
+```
+# Vader
+
+```{r}
+get_vader(philosophers_stone[1])
+
+hp1_vader <- vader_df(philosophers_stone)
+```
+```{r}
+hp1_vader$compound
+
+hp1_vader$chapter <- 1:nrow(hp1_vader)
+
+plot <- ggplot(hp1_vader, aes(x =chapter, y=compound)) +
+          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE)
+plot + ylim(-5.0, 5.0) + labs(y="sentiment", x = "chapter") + ggtitle("HP1 - VADER")
+```
+```{r}
+series
+```
+```{r}
+# apply vader lexicon to all HP books
+series$vader <- vader_df(series$text)$compound
+```
+
+
+```{r}
 #series.df <- as.data.frame(series)
 
 plot <- ggplot(series, aes(chapter, lsd, fill = book)) + # plot sentiment of books
