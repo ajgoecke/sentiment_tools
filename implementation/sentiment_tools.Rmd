@@ -36,7 +36,7 @@ require(quanteda.sentiment)
 ```
 
 ```{r}
-# load afinn lexicon
+# load afinn lexicon, first option
 
 # manually -> convert to binary lexicon
 afinn_dict <- read.csv("lexika/AFINN-111.txt", header = F, sep = "\t", stringsAsFactors = F)
@@ -47,11 +47,6 @@ afinn <- get_sentiments("afinn")
 
 ```
 
-```{r}
-dfm.sentiment <- dfm(korpus, dictionary = afinn_binary)
-
-dfm.sentiment
-```
 # Harry Potter - Dataset
 ```{r}
 # load harry potter dataset 
@@ -114,33 +109,6 @@ afinn_hp2
 #ggsave(plot = afinn, width = 15, height = 15, dpi = 300, filename = "afinn_hp_mean.png")
 ```
 
-# Jane Austen - Dataset
-```{r}
-tidy_books <- austen_books() %>%
-  group_by(book) %>%
-  mutate(
-    linenumber = row_number(),
-    chapter = cumsum(str_detect(text, 
-                                regex("^chapter [\\divxlc]", 
-                                      ignore_case = TRUE)))) %>%
-  ungroup() %>%
-  unnest_tokens(word, text)
-```
-
-```{r}
-pride_prejudice <- tidy_books %>% 
-  filter(book == "Pride & Prejudice")
-```
-
-### Jane Austen - AFINN Lexicon
-```{r}
-afinn_austen <- pride_prejudice %>% 
-  inner_join(get_sentiments("afinn")) %>% 
-  group_by(index = linenumber %/% 80) %>% 
-  summarise(sentiment = sum(value)) %>% 
-  mutate(method = "AFINN")
-```
-
 ### load afinn via quanteda.sentiment
 ```{r}
 afinn2 <- data_dictionary_AFINN
@@ -151,9 +119,10 @@ afinn2
 #data_dictionary_LSD2015_pos_neg <- data_dictionary_LSD2015[1:2]
 #data_dictionary_LSD2015
 ```
+
 ```{r}
-library("quanteda", warn.conflicts = FALSE, quietly = TRUE)
-print(data_dictionary_AFINN, max_nval = 8)
+#library("quanteda", warn.conflicts = FALSE, quietly = TRUE)
+#print(data_dictionary_AFINN, max_nval = 8)
 ```
 
 # Lexicoder Sentiment Dictionary
@@ -161,16 +130,6 @@ print(data_dictionary_AFINN, max_nval = 8)
 ```{r}
 # tokenize hp1
 hp1_tokenized <- tokens_tolower(tokens(philosophers_stone, remove_punct = TRUE)) 
-  
-
-# tokenize whole corpus
-#tokenized_hp_all <- series %>%
- # toks <- tokens(remove_punct = TRUE, remove_symbols = TRUE) %>%
-  #tokens_tolower(toks)
-```
-
-```{r}
-#hp1_tokenized[[1]]
 ```
 
 ```{r}
@@ -190,7 +149,7 @@ hp1_lsd
 ```
 
 ```{r}
-# hp1_lsd_tokens
+
 hp1_lsd.df <- as.data.frame.matrix(hp1_lsd)
 
 hp1_lsd.df$chapter <- 1:nrow(hp1_lsd.df)
@@ -285,8 +244,8 @@ plot <- ggplot(series, aes(chapter, lsd, fill = book)) + # plot sentiment of boo
           ggtitle("Lexicoder HP")
 plot 
 ```
-# Vader
 
+# Vader
 ```{r}
 get_vader(philosophers_stone[1])
 
@@ -320,26 +279,47 @@ plot <- ggplot(series, aes(chapter, lsd, fill = book)) + # plot sentiment of boo
 plot 
 ```
 
-# REAL DATASET
+# REVIEWS DATASET
 ```{r}
+# load dataset
 reviews <- readtext("datasets/goodreads_reviews_children_2.json", text_field = "review_text")
+
+# convert to dataframe
 reviews.df <- as.data.frame(reviews)
+
+# add doc_id (i.e. according to index)
 reviews.df$doc_id <- 1:nrow(reviews.df)
 
-
 reviews.df
+```
 
+```{r}
 # get random sample of 50 reviews 
 reviews_sample <- reviews.df[sample(1:nrow(reviews.df), 50,
    replace=FALSE),]
 
 # get first 50 rows of data 
 reviews_50 <- head(reviews.df,50)
-
+reviews_50 = subset(reviews_50, select = c(doc_id,text,rating))
 reviews_50
 ```
 
+# Get Translations of Dataset 
+```{r}
+# either via corpus 
+reviews.corpus <- corpus(reviews)
+docvars(reviews.corpus, "language") <- textcat(reviews.corpus)
+reviews_en <- corpus_subset(reviews.corpus, language == "english", drop_docid = TRUE)
+
+# or via dataframe logic
+reviews.df$language <- textcat(reviews.df$text)
+
+reviews.df
+```
+
 # Perform SA on Reviews
+
+### AFINN
 ```{r}
 # Afinn
 # tokenize 
@@ -352,6 +332,15 @@ reviews_tokenized$afinn2 <- textstat_valence(reviews_tokenized$tokens, afinn2)$s
 # replace all 0 values with na
 reviews_tokenized[reviews_tokenized == 0] <- NA
 
+# calculate mean scores for tokens per doc
+afinn_scores <- reviews_tokenized %>%
+  group_by(doc_id) %>% # group df by doc_id to get mean sentiment score
+  summarise(total = mean(afinn2, na.rm = TRUE)) #%>% # calculate mean w/o regarding na values
+
+# add afinn scores to df 
+reviews_50$afinn <- afinn_scores$total
+
+# different version to get plot 
 reviews_tokenized %>%
   group_by(doc_id) %>% # group df by book and chapter to get sentiment per chapter
   #reviews_tokenized$sentiment = mean(afinn2, na.rm = TRUE) %>%
@@ -361,16 +350,24 @@ reviews_tokenized %>%
           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
           #facet_wrap(~ doc_id, ncol = 2, scales = "free_x") +
           ggtitle("AFINN Reviews")
-
-#reviews_tokenized %>% 
- # group_by(doc_id) %>%
-  #summarise(afinn_sentiment = mean(afinn2, na.rm=TRUE)) %>%
- # summarise(lsd_sentiment = mean(lsd, na.rm=TRUE))
-
-
-
 ```
 
+```{r}
+reviews_50
+```
+```{r}
+#reviews.afinn$lsd_total <- reviews_50$lsd
+
+#reviews.afinn$text <- reviews_50$text
+#reviews.afinn$rating <- reviews_50$rating
+
+
+#reviews.afinn
+#reviews_50$afinn <- reviews.afinn$afinn_total
+
+reviews_50
+```
+### LEXICODER
 ```{r}
 # apply lexicoder lexicon
 reviews_50$lsd <- textstat_polarity(tokens(reviews_50$text), data_dictionary_LSD2015)$sentiment 
@@ -396,23 +393,203 @@ plot
 ```
 
 ```{r}
-reviews <- readtext("datasets/goodreads_reviews_children_2.json", text_field = "review_text")
-reviews.corpus <- corpus(reviews)
+reviews_50
+```
+# Check Golstandard
+```{r}
+# convert to binary results
+reviews_50$afinn_binary[reviews_50$afinn > 0] <- "pos"
+reviews_50$afinn_binary[reviews_50$afinn <= 0] <- "neg"
 
-docvars(reviews.corpus, "language") <- textcat(reviews.corpus)
+reviews_50$lsd_binary[reviews_50$lsd > 0] <- "pos"
+reviews_50$lsd_binary[reviews_50$lsd <= 0] <- "neg"
 
-reviews_en <- corpus_subset(reviews.corpus, language == "english", drop_docid = TRUE)
+reviews_50$vader_binary[reviews_50$vader > 0] <- "pos"
+reviews_50$vader_binary[reviews_50$vader <= 0] <- "neg"
+
+reviews_50$rating_binary[reviews_50$rating >= 3] <- "pos"
+reviews_50$rating_binary[reviews_50$rating < 3] <- "neg"
+
+#reviews_50[reviews_50 == NA] <- "neu"
 ```
 
 ```{r}
-reviews_en
+afinn_goldst <- sum(ifelse(reviews_50$rating_binary==reviews_50$afinn_binary,1,0), na.rm = TRUE)
+
+lsd_goldst <- sum(ifelse(reviews_50$rating_binary==reviews_50$lsd_binary,1,0), na.rm = TRUE)
+
+vader_goldst <- sum(ifelse(reviews_50$rating_binary==reviews_50$vader_binary,1,0), na.rm = TRUE)
+
+lexicon <- c("afinn", "lexicoder", "vader")
+sum <- c(afinn_goldst,lsd_goldst,vader_goldst)
+accuracy <- c(afinn_goldst/nrow(reviews_50),lsd_goldst/nrow(reviews_50),vader_goldst/nrow(reviews_50))
+
+final.df <- data.frame(lexicon, sum, accuracy)
+
 ```
 
 ```{r}
-reviews.df$language <- textcat(reviews.df$text)
-
-reviews.df
+final.df
 ```
+
+```{r}
+# calculate precision and recall
+#https://www.projectpro.io/recipes/calculate-precision-recall-and-f1-score-r
+```
+
+```{r}
+test <- reviews_50
+
+# 0 = negative, 1 = positive
+
+# convert to binary results
+test$afinn_binary[test$afinn > 0] <- 1
+test$afinn_binary[test$afinn <= 0] <- 0
+
+test$lsd_binary[test$lsd > 0] <- 1
+test$lsd_binary[test$lsd <= 0] <- 0
+
+test$vader_binary[test$vader > 0] <- 1
+test$vader_binary[test$vader <= 0] <- 0
+
+test$rating_binary[test$rating >= 3] <- 1
+test$rating_binary[test$rating < 3] <- 0
+
+
+test
+```
+```{r}
+actual_values <- test$rating_binary
+predict_values <- test$afinn_binary
+
+# create confusion matrix 
+confusion_matrix <- table(ACTUAL=actual_values, PREDICTED=predict_values)
+
+# assign values from matrix to true/false positives/negatives
+TN <- confusion_matrix[1]
+FN <- confusion_matrix[2]
+FP <- confusion_matrix[3]
+TP <- confusion_matrix[4]
+
+# calculate statistics
+precision <- TP/(TP+FP)
+accuracy <- (TP+TN)/(TP+TN+FP+FN)
+recall <- TP/(TP+FN)
+F1 <- (2*precision*recall)/(precision+recall)
+```
+
+```{r}
+# function to get statistics
+
+statistics <- data.frame(matrix(ncol=4, nrow=3))
+x <- c("accuracy", "precision", "recall", "F1")
+y <- c("afinn", "lsd", "vader")
+rownames(statistics) <- y
+colnames(statistics) <- x
+
+get_statistics <- function(lexicon, actual_values, predict_values) {
+  confusion_matrix <- table(ACTUAL=actual_values, PREDICTED=predict_values)
+  TN <- confusion_matrix[1]
+  FN <- confusion_matrix[2]
+  FP <- confusion_matrix[3]
+  TP <- confusion_matrix[4]
+  
+  # calculate statistics
+  precision <- TP/(TP+FP)
+  accuracy <- (TP+TN)/(TP+TN+FP+FN)
+  recall <- TP/(TP+FN)
+  F1 <- (2*precision*recall)/(precision+recall)
+  
+  output <- c(accuracy,precision, recall, F1)
+  name <- deparse(substitute(lexicon))
+
+  
+  statistics[name,] = rbind(statistics$name, output)
+  
+  # add to table
+  #name <- deparse(substitute(lexicon))
+  #statistics[name] <- c(accuracy, precision, recall, F1)
+  #statistics = mutate(statistics$name,c(accuracy, precision, recall, F1) )
+  return(statistics)
+  
+}
+# to turn variable name into string 
+# deparse(substitute(afinn))
+
+get_statistics(afinn, test$rating_binary, test$afinn_binary)
+get_statistics(lsd, test$rating_binary, test$lsd_binary)
+get_statistics(vader, test$rating_binary, test$vader_binary)
+
+statistics
+
+
+
+
+
+
+
+statistics <- data.frame(matrix(ncol=4, nrow=3))
+x <- c("accuracy", "precision", "recall", "F1")
+y <- c("afinn", "lsd", "vader")
+rownames(statistics) <- y
+colnames(statistics) <- x
+
+```
+
+
+```{r}
+# second try
+get_statistics <- function(lex1,lex2,lex3, goldstandard) {
+  statistics <- data.frame(matrix(ncol=4, nrow=3))
+  x <- c("accuracy", "precision", "recall", "F1")
+  y <- c("afinn", "lsd", "vader")
+  colnames(statistics) <- x
+  rownames(statistics) <- y
+    
+  lexicons <- list(lex1, lex2, lex3)
+  #print(lex1)
+  #print(goldstandard)
+  #for lex in lexicon, do
+  for(lex in lexicons){
+    #print(lex)
+    confusion_matrix <- table(ACTUAL=goldstandard, PREDICTED=lex)
+    TN <- confusion_matrix[1]
+    FN <- confusion_matrix[2]
+    FP <- confusion_matrix[3]
+    TP <- confusion_matrix[4]
+  
+    # calculate statistics
+    precision <- TP/(TP+FP)
+    accuracy <- (TP+TN)/(TP+TN+FP+FN)
+    recall <- TP/(TP+FN)
+    F1 <- (2*precision*recall)/(precision+recall)
+  
+    # add to table
+    #name <- deparse(substitute(lex)) # how to retrieve column name?
+    output <- c(accuracy,precision, recall, F1)
+    print(name)
+    print(output)
+    statistics[name,] = rbind(statistics$name, output)
+    }
+    
+  return(statistics)
+  
+}
+
+get_statistics(test$afinn_binary,test$lsd_binary,test$vader_binary,test$rating_binary)
+```
+
+
+```{r}
+lexicons <- list(test$afinn_binary, test$lsd_binary)
+
+for(lex in lexicons){
+  print(lex)
+}
+
+```
+
+
 
 
 
