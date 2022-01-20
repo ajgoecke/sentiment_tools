@@ -20,6 +20,7 @@ library(harrypotter)
 library(dplyr)
 library(quanteda.sentiment)
 library(vader)
+library(caret)
 
 
 require(quanteda)
@@ -27,9 +28,192 @@ require(quanteda.corpora)
 require(quanteda.sentiment)
 #library("quanteda", warn.conflicts = FALSE, quietly = TRUE)
 ```
-```{r}
-afinn2 <- data_dictionary_AFINN
 
+# 1. Step: Load Data & Lexicons
+```{r}
+# load datasets
+reviews <- readRDS(file="datasets/red_review.rds")
+twitter <- readRDS(file="datasets/red_twitter.rds")
+parlvote <- readRDS(file="datasets/red_parl_vote.rds")
+
+# load lexicon
+afinn <- data_dictionary_AFINN
+```
+
+```{r}
+reviews
+twitter
+parlvote
+```
+# 2. Step: Perform Sentiment Analysis
+```{r}
+# complete function to get lexicon scores
+get_sentiment <- function(data, lexicons){
+  
+  for(lex in lexicons){
+    if(lex == "afinn"){
+      
+    data$afinn <- textstat_valence(tokens(data$text), afinn, normalize="dictionary")$sentiment
+    }
+    
+    if(lex == "lsd"){
+    data$lsd<- textstat_polarity(tokens(data$text), data_dictionary_LSD2015)$sentiment
+    }
+    
+    if(lex == "vader"){
+    data$vader <- vader_df(data$text)$compound
+    }
+  }
+  data[is.na(data)] <- 0
+  return(data)
+}
+
+reviews_sentiment <- get_sentiment(reviews, c("afinn","lsd", "vader"))
+twitter_sentiment <- get_sentiment(twitter, c("afinn","lsd", "vader"))
+parlvote_sentiment <- get_sentiment(parlvote, c("afinn","lsd", "vader"))
+
+parlvote_sentiment
+```
+# 3. Step: Calculate Statistics
+```{r}
+# convert to binary results
+get_binary <- function(dataframes, type){
+  for(df in dataframes){
+    df$afinn_binary[df$afinn > 0] <- "pos"
+    df$afinn_binary[df$afinn <= 0] <- "neg"
+        
+    df$lsd_binary[df$lsd > 0] <- "pos"
+    df$lsd_binary[df$lsd <= 0] <- "neg"
+        
+    df$vader_binary[df$vader > 0] <- "pos"
+    df$vader_binary[df$vader <= 0] <- "neg"
+        
+    df$rating_binary[df$rating >= 3] <- "pos"
+    df$rating_binary[df$rating < 3] <- "neg"
+    if(type == "01"){
+      df[df == "pos"] <- 1
+      df[df == "neg"] <- 0
+    }
+  }
+  return(dataframes)
+}
+
+
+x <- get_binary(list(reviews_sentiment, twitter_sentiment, parlvote_sentiment), "01")
+```
+
+```{r}
+reviews_sentiment$afinn_binary[reviews_sentiment$afinn > 0] <- "1"
+reviews_sentiment$afinn_binary[reviews_sentiment$afinn <= 0] <- "0"
+reviews_sentiment$lsd_binary[reviews_sentiment$lsd > 0] <- "1"
+reviews_sentiment$lsd_binary[reviews_sentiment$lsd <= 0] <- "0"
+reviews_sentiment$vader_binary[reviews_sentiment$vader > 0] <- "1"
+reviews_sentiment$vader_binary[reviews_sentiment$vader <= 0] <- "0"
+reviews_sentiment$rating_binary[reviews_sentiment$rating >= 3] <- "1"
+reviews_sentiment$rating_binary[reviews_sentiment$rating < 3] <- "0"
+
+twitter_sentiment$afinn_binary[twitter_sentiment$afinn > 0] <- "1"
+twitter_sentiment$afinn_binary[twitter_sentiment$afinn <= 0] <- "0"
+twitter_sentiment$lsd_binary[twitter_sentiment$lsd > 0] <- "1"
+twitter_sentiment$lsd_binary[twitter_sentiment$lsd <= 0] <- "0"
+twitter_sentiment$vader_binary[twitter_sentiment$vader > 0] <- "1"
+twitter_sentiment$vader_binary[twitter_sentiment$vader <= 0] <- "0"
+twitter_sentiment$rating_binary[twitter_sentiment$rating >= 3] <- "1"
+twitter_sentiment$rating_binary[twitter_sentiment$rating < 3] <- "0"
+
+parlvote_sentiment$afinn_binary[parlvote_sentiment$afinn > 0] <- "1"
+parlvote_sentiment$afinn_binary[parlvote_sentiment$afinn <= 0] <- "0"
+parlvote_sentiment$lsd_binary[parlvote_sentiment$lsd > 0] <- "1"
+parlvote_sentiment$lsd_binary[parlvote_sentiment$lsd <= 0] <- "0"
+parlvote_sentiment$vader_binary[parlvote_sentiment$vader > 0] <- "1"
+parlvote_sentiment$vader_binary[parlvote_sentiment$vader <= 0] <- "0"
+parlvote_sentiment$rating_binary[parlvote_sentiment$rating >= 3] <- "1"
+parlvote_sentiment$rating_binary[parlvote_sentiment$rating < 3] <- "0"
+
+# optionally: convert 0 = negative, 1 = positive
+#reviews_50[reviews_50 == "pos"] <- 1
+#reviews_50[reviews_50 == "neg"] <- 0
+```
+
+```{r}
+parlvote_sentiment
+```
+
+
+```{r}
+get_statistics <- function(df) {
+  #statistics <- data.frame(matrix(ncol=4, nrow=0))
+  #x <- c("accuracy", "precision", "recall", "F1")
+  #colnames(statistics) <- x
+  statistics <- data.frame(matrix(ncol=1, nrow=0))
+  colnames(statistics) <- "accuracy"
+  
+  lex1 <- "afinn_binary"
+  lex2 <- "lsd_binary"
+  lex3 <- "vader_binary"
+  gold <- "rating_binary"
+  
+  lexicons <- c(lex1,lex2,lex3)
+  
+  for(lex in lexicons){
+    cf <- confusionMatrix(factor(df[[lex]]),factor(df[[gold]]))
+    accuracy <- cf[[3]][1]
+    #confusion_matrix <- table(ACTUAL=df[[gold]], PREDICTED=df[[lex]])
+    #TN <- confusion_matrix[1]
+    #FN <- confusion_matrix[2]
+    #FP <- confusion_matrix[3]
+    #TP <- confusion_matrix[4]
+    
+    # calculate statistics
+    #precision <- TP/(TP+FP)
+    #accuracy <- (TP+TN)/(TP+TN+FP+FN)
+    #recall <- TP/(TP+FN)
+    #F1 <- (2*precision*recall)/(precision+recall)
+  
+    # add to table
+    #output <- c(accuracy,precision, recall, F1)
+    #statistics[lex,] = rbind(statistics[[lex]], output)
+    statistics[lex,] = rbind(statistics[[lex]], accuracy)
+    #print(output)
+    }
+    
+  return(statistics)
+  
+}
+
+review_stats <- get_statistics(reviews_sentiment)
+#twitter_stats <- get_statistics(twitter_sentiment)
+#parlvote_stats <- get_statistics(parlvote_sentiment)
+
+review_stats
+```
+
+# 4. Step: Plot Data 
+```{r}
+# plot columns
+reviews_dfm <- melt(head(reviews_sentiment,50)[,c('id','afinn','lsd','vader')],id.vars = 1)
+
+reviews_plot <- ggplot(reviews_dfm,aes(x = id,y = value)) + 
+                geom_bar(aes(fill = variable),stat = "identity",position = "dodge") +
+                ggtitle("Reviews Sentiments")
+
+
+twitter_dfm <- melt(head(twitter_sentiment,50)[,c('id','afinn','lsd','vader')],id.vars = 1)
+
+twitter_plot <- ggplot(twitter_dfm,aes(x = id,y = value)) + 
+                geom_bar(aes(fill = variable),stat = "identity",position = "dodge") +
+                ggtitle("Twitter Sentiments")
+
+parlvote_dfm <- melt(head(parlvote_sentiment,50)[,c('id','afinn','lsd','vader')],id.vars = 1)
+
+parlvote_plot <- ggplot(parlvote_dfm,aes(x = id,y = value)) + 
+                geom_bar(aes(fill = variable),stat = "identity",position = "dodge")+
+                facet_wrap(~ variable, ncol = 1, scales="free_y")+
+                ggtitle("ParlVote Sentiments")
+
+reviews_plot
+twitter_plot
+parlvote_plot
 ```
 
 # Harry Potter - Dataset
@@ -102,12 +286,12 @@ plot + ylim(-1.0, 1.0) + labs(y="sentiment", x = "chapter") + ggtitle("HP1 - Lex
 ```
 # AFINN: HP
 ```{r}
-hp1_afinn2 <- textstat_valence(hp1_tokenized, afinn2, normalize="dictionary")
+hp1_afinn <- textstat_valence(hp1_tokenized, afinn, normalize="dictionary")
 
-hp1_afinn2.df <- as.data.frame.matrix(hp1_afinn2)
-hp1_afinn2.df$chapter <- 1:nrow(hp1_afinn2.df)
+hp1_afinn.df <- as.data.frame.matrix(hp1_afinn)
+hp1_afinn.df$chapter <- 1:nrow(hp1_afinn.df)
 
-plot <- ggplot(hp1_afinn2.df, aes(x =hp1_afinn2.df$chapter, y=sentiment)) +
+plot <- ggplot(hp1_afinn.df, aes(x =hp1_afinn.df$chapter, y=sentiment)) +
           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE)
 plot + ylim(-1.0, 1.0) + labs(y="sentiment", x = "chapter") + ggtitle("HP1 - AFINN")
 ```
@@ -134,14 +318,14 @@ series_tokenized <- series.df %>%
   unnest_tokens(tokens, text)
 
 # apply afinn lexicon
-series_tokenized$afinn2 <- textstat_valence(series_tokenized$tokens, afinn2)$sentiment
+series_tokenized$afinn <- textstat_valence(series_tokenized$tokens, afinn)$sentiment
 
 # replace all 0 values with na
 series_tokenized[series_tokenized == 0] <- NA
 
 series_tokenized %>%
   group_by(book, chapter) %>% # group df by book and chapter to get sentiment per chapter
-  summarise(sentiment = mean(afinn2, na.rm = TRUE)) %>% # calculate mean w/o regarding na values
+  summarise(sentiment = mean(afinn, na.rm = TRUE)) %>% # calculate mean w/o regarding na values
   mutate(method = "AFINN") %>% # add column with method 
         ggplot(aes(chapter, sentiment, fill = book)) + # plot sentiment of books
           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
@@ -220,7 +404,7 @@ reviews_tokenized <- reviews_50 %>%
   unnest_tokens(tokens, text)
 
 # apply afinn lexicon
-reviews_tokenized$afinn2 <- textstat_valence(reviews_tokenized$tokens, afinn2)$sentiment
+reviews_tokenized$afinn <- textstat_valence(reviews_tokenized$tokens, afinn)$sentiment
 
 # replace all 0 values with na
 reviews_tokenized[reviews_tokenized == 0] <- NA
@@ -228,7 +412,7 @@ reviews_tokenized[reviews_tokenized == 0] <- NA
 # calculate mean scores for tokens per doc
 afinn_scores <- reviews_tokenized %>%
   group_by(doc_id) %>% # group df by doc_id to get mean sentiment score
-  summarise(total = mean(afinn2, na.rm = TRUE)) #%>% # calculate mean w/o regarding na values
+  summarise(total = mean(afinn, na.rm = TRUE)) #%>% # calculate mean w/o regarding na values
 
 # add afinn scores to df 
 reviews_50$afinn <- afinn_scores$total
@@ -236,8 +420,8 @@ reviews_50$afinn <- afinn_scores$total
 # different version to get plot 
 reviews_tokenized %>%
   group_by(doc_id) %>% # group df by book and chapter to get sentiment per chapter
-  #reviews_tokenized$sentiment = mean(afinn2, na.rm = TRUE) %>%
-  summarise(sentiment = mean(afinn2, na.rm = TRUE)) %>% # calculate mean w/o regarding na values
+  #reviews_tokenized$sentiment = mean(afinn, na.rm = TRUE) %>%
+  summarise(sentiment = mean(afinn, na.rm = TRUE)) %>% # calculate mean w/o regarding na values
   mutate(method = "AFINN") %>% # add column with method 
         ggplot(aes(doc_id, sentiment, fill = doc_id)) + # plot sentiment of books
           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
@@ -287,8 +471,8 @@ reviews_50[reviews_50 == "neg"] <- 0
 ```
 
 ```{r}
-actual_values <- test$rating_binary
-predict_values <- test$afinn_binary
+actual_values <- twitter_sentiment$rating_binary
+predict_values <- twitter_sentiment$afinn_binary
 
 # create confusion matrix 
 confusion_matrix <- table(ACTUAL=actual_values, PREDICTED=predict_values)
@@ -304,6 +488,18 @@ precision <- TP/(TP+FP)
 accuracy <- (TP+TN)/(TP+TN+FP+FN)
 recall <- TP/(TP+FN)
 F1 <- (2*precision*recall)/(precision+recall)
+
+precision
+accuracy
+recall
+confusion_matrix[3]
+```
+```{r}
+twitter_sentiment[twitter_sentiment == NA] <- 0
+
+twitter_sentiment[is.na(twitter_sentiment)] <- 0
+
+twitter_sentiment
 ```
 
 ```{r}
@@ -343,19 +539,6 @@ get_statistics <- function(df) {
 get_statistics(test)
 ```
 
-```{r}
-test[["vader_binary"]]
-```
-
-
-```{r}
-lexicons <- list(test$afinn_binary, test$lsd_binary)
-
-for(lex in lexicons){
-  print(lex)
-}
-
-```
 
 
 

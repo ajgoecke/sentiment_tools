@@ -31,6 +31,7 @@ require(quanteda.corpora)
 require(quanteda.sentiment)
 #library("quanteda", warn.conflicts = FALSE, quietly = TRUE)
 ```
+
 ```{r}
 afinn2 <- data_dictionary_AFINN
 
@@ -68,23 +69,6 @@ series
 #hp1_tokenized <- tokens_tolower(tokens(philosophers_stone, remove_punct = TRUE)) 
 ```
 ### Harry Potter - AFINN Lexicon
-```{r}
-afinn_hp2 <- series %>%
-        group_by(book, chapter) %>% # add word for single word scores 
-        inner_join(get_sentiments("afinn")) %>%
-        group_by(book, chapter) %>% # add word for single word scores
-        #summarise(sentiment = sum(value)) %>%
-        summarise(sentiment = mean(value, na.rm = TRUE)) %>%
-        mutate(method = "AFINN")  %>%
-        ggplot(aes(chapter, sentiment, fill = book)) +
-          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
-          facet_wrap(~ book, ncol = 2, scales = "free_x")
-
-afinn_hp2
-
-#ggsave(plot = afinn, width = 15, height = 15, dpi = 300, filename = "afinn_hp_mean.png")
-```
-
 # Lexicoder: HP
 ```{r}
 # select only the "negative" and "positive" categories
@@ -347,19 +331,6 @@ get_statistics <- function(df) {
 get_statistics(test)
 ```
 
-```{r}
-test[["vader_binary"]]
-```
-
-
-```{r}
-lexicons <- list(test$afinn_binary, test$lsd_binary)
-
-for(lex in lexicons){
-  print(lex)
-}
-
-```
 
 
 
