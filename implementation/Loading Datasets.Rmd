@@ -35,6 +35,9 @@ red_parl_vote<-red_parl_vote %>%
 
 red_parl_vote<-red_parl_vote[sample(nrow(red_parl_vote), 600), ]
 
+red_parl_vote$id <- 1:nrow(red_parl_vote) 
+red_parl_vote<-red_parl_vote[,c(3,1,2)]
+
 ```
 
 Kinderbücher Rezensionen Corpus
@@ -68,7 +71,10 @@ hold1<-hold[sample(nrow(hold), 100), ]
 
 red_review <- rbind( red_review, hold1)
 }
+red_review<-as.data.frame(red_review)
 
+red_review$id <- 1:nrow(red_review) 
+ red_review<-red_review[,c(3,1,2)]
 ```
 ```{r}
 
@@ -87,6 +93,9 @@ red_twitter<-red_twitter%>%
  rename(rating = sentiment)
 
 red_twitter<-red_twitter[sample(nrow(red_twitter), 600), ]
+
+red_twitter$id <- 1:nrow(red_twitter) 
+red_twitter<-red_twitter[,c(3,1,2)]
 
 red_twitter%>%
   count(rating)
