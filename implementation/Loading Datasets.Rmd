@@ -3,6 +3,11 @@ title: "Preprocessing the data sets"
 ---
 ParlVote Corpus
 ```{r}
+install.packages("tidyverse")
+```
+
+
+```{r}
 ParlVote_concat <- read.csv("~/Studium/3 Semester/PM/Corpora/ParlVote_concat.csv")
 ```
 
@@ -12,6 +17,9 @@ library(quanteda)
 library(readtext)
 library(rjson)
 library(jsonlite)
+library(tidyverse)
+library(dplyr)
+
 ```
 
 
@@ -19,6 +27,14 @@ library(jsonlite)
 #only use relevant columns and throw out entries with non ascii characters
 red_parl_vote<- subset(ParlVote_concat, select = c("speech","vote"))
 red_parl_vote <-red_parl_vote[which(!grepl("[^\x01-\x7F]+",red_parl_vote$speech)),]
+
+red_parl_vote<-red_parl_vote %>% 
+ rename(
+    text = speech,
+    rating = vote)
+
+red_parl_vote<-red_parl_vote[sample(nrow(red_parl_vote), 600), ]
+
 ```
 
 Kinderbücher Rezensionen Corpus
@@ -32,16 +48,57 @@ reviews <- readtext("goodreads_reviews_children_2.json", text_field = "review_te
 
 
 ```{r}
-#filter for languages and create a subset of 100 entries each 
+#filter for languages and create a subset of 100 entries each
+```
+
+
+```{r}
 reviews$language <- textcat(reviews$text)
-total <- data.frame(text=character(),
+```
+
+
+```{r}
+red_review <- data.frame(text=character(),
                  rating=integer(), 
                  stringsAsFactors=FALSE) 
 for (i in 0:5){
 hold<- subset(reviews, rating == i| language=="english", select = c("text","rating"))
+
 hold1<-hold[sample(nrow(hold), 100), ]
-total <- rbind( total, hold1)
+
+red_review <- rbind( red_review, hold1)
 }
+
+```
+```{r}
+
+```
+
+Twitter Corpus
+```{r}
+twitter <- read.csv("~/Studium/3 Semester/PM/Corpora/Sentiment.csv", comment.char="#")
+```
+```{r}
+red_twitter<- subset(twitter,sentiment_confidence <0.6, select = c("text","sentiment"))
+
+red_twitter <-red_twitter[which(!grepl("[^\x01-\x7F]+",red_twitter$text)),]
+
+red_twitter<-red_twitter%>% 
+ rename(rating = sentiment)
+
+red_twitter<-red_twitter[sample(nrow(red_twitter), 600), ]
+
+red_twitter%>%
+  count(rating)
+```
+
+
+```{r}
+saveRDS(red_twitter, file = "red_twitter.rds")
+saveRDS(red_parl_vote, file = "red_parl_vote.rds")
+saveRDS(red_review, file = "red_review.rds")
+saveRDS(reviews, file = "reviews_with_language.rds")
+
 
 ```
 
