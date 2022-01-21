@@ -19,6 +19,7 @@ library(rjson)
 library(jsonlite)
 library(tidyverse)
 library(dplyr)
+library(tidyverse)
 
 ```
 
@@ -33,7 +34,7 @@ red_parl_vote<-red_parl_vote %>%
     text = speech,
     rating = vote)
 
-red_parl_vote<-red_parl_vote[sample(nrow(red_parl_vote), 600), ]
+red_parl_vote<-red_parl_vote[sample(nrow(red_parl_vote), 1000), ]
 
 red_parl_vote$id <- 1:nrow(red_parl_vote) 
 red_parl_vote<-red_parl_vote[,c(3,1,2)]
@@ -92,7 +93,7 @@ red_twitter <-red_twitter[which(!grepl("[^\x01-\x7F]+",red_twitter$text)),]
 red_twitter<-red_twitter%>% 
  rename(rating = sentiment)
 
-red_twitter<-red_twitter[sample(nrow(red_twitter), 600), ]
+red_twitter<-red_twitter[sample(nrow(red_twitter), 1000), ]
 
 red_twitter$id <- 1:nrow(red_twitter) 
 red_twitter<-red_twitter[,c(3,1,2)]
@@ -106,7 +107,8 @@ red_twitter%>%
 saveRDS(red_twitter, file = "red_twitter.rds")
 saveRDS(red_parl_vote, file = "red_parl_vote.rds")
 saveRDS(red_review, file = "red_review.rds")
-saveRDS(reviews, file = "reviews_with_language.rds")
+saveRDS(red_ama, file = "red_ama.rds")
+#saveRDS(reviews, file = "reviews_with_language.rds")
 
 
 ```
@@ -116,8 +118,58 @@ Kyoto Corpus
 setwd("/Users/rike-/Documents/Studium/3 Semester/PM/kyoto texts/kyoto texts/")
 #read in kyoto table
 kyoto <- read.csv('kyoto_editorials_all.csv')
+```
 
 
+```{r}
+```
+
+
+```{r}
+ama <- read.csv("C:/Users/rike-/Desktop/Industrial_and_Scientific.json.gz", header=FALSE,nrows=90000)
+```
+```{r}
+ama_rev <- ama[grep("overall", ama$V1),]
+ama_rev <- ama_rev[grep("reviewText", ama_rev$V7),]
+ama_rev<-dplyr::filter(ama_rev, !grepl("reviewerName",V7))
+
+
+ama_rev<- subset(ama_rev, select = c("V1","V7"))
+
+ama_rev<-ama_rev%>% 
+ rename(rating = V1,text=V7)
+
+ama_rev$rating[ama_rev$rating == "{overall: 5.0"] <- 5
+ama_rev$rating[ama_rev$rating == "{overall: 4.0"] <- 4
+ama_rev$rating[ama_rev$rating == "{overall: 3.0"] <- 3
+ama_rev$rating[ama_rev$rating == "{overall: 2.0"] <- 2
+ama_rev$rating[ama_rev$rating == "{overall: 1.0"] <- 1
+
+ama_rev<-transform(ama_rev, rating = as.numeric(rating))
+ama_rev<-ama_rev[!is.na(ama_rev$rating),]
+
+
+
+red_ama <- data.frame(id=integer(),
+                 text=character(),
+                 rating=integer(), 
+                 stringsAsFactors=FALSE) 
+
+for (i in 1:5){
+
+hold<- subset(ama_rev, rating == i, select = c("text","rating"))
+
+
+hold1<-hold[sample(nrow(hold), 200), ]
+
+
+red_ama <- rbind(red_ama, hold1)
+}
+
+red_ama$id <- 1:nrow(red_ama) 
+red_ama<-red_ama[,c(3,1,2)]
+red_ama%>%
+  count(text)
 ```
 
 
