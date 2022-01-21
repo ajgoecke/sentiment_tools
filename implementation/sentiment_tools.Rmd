@@ -21,6 +21,7 @@ library(dplyr)
 library(quanteda.sentiment)
 library(vader)
 library(caret)
+library(reshape2)
 
 
 require(quanteda)
@@ -118,8 +119,9 @@ twitter_sentiment$lsd_binary[twitter_sentiment$lsd > 0] <- "1"
 twitter_sentiment$lsd_binary[twitter_sentiment$lsd <= 0] <- "0"
 twitter_sentiment$vader_binary[twitter_sentiment$vader > 0] <- "1"
 twitter_sentiment$vader_binary[twitter_sentiment$vader <= 0] <- "0"
-twitter_sentiment$rating_binary[twitter_sentiment$rating >= 3] <- "1"
-twitter_sentiment$rating_binary[twitter_sentiment$rating < 3] <- "0"
+twitter_sentiment$rating_binary[twitter_sentiment$rating == "Positive"] <- "1"
+twitter_sentiment$rating_binary[twitter_sentiment$rating == "Negative"] <- "0"
+twitter_sentiment$rating_binary[twitter_sentiment$rating == "Neutral"] <- NA
 
 parlvote_sentiment$afinn_binary[parlvote_sentiment$afinn > 0] <- "1"
 parlvote_sentiment$afinn_binary[parlvote_sentiment$afinn <= 0] <- "0"
@@ -127,8 +129,6 @@ parlvote_sentiment$lsd_binary[parlvote_sentiment$lsd > 0] <- "1"
 parlvote_sentiment$lsd_binary[parlvote_sentiment$lsd <= 0] <- "0"
 parlvote_sentiment$vader_binary[parlvote_sentiment$vader > 0] <- "1"
 parlvote_sentiment$vader_binary[parlvote_sentiment$vader <= 0] <- "0"
-parlvote_sentiment$rating_binary[parlvote_sentiment$rating >= 3] <- "1"
-parlvote_sentiment$rating_binary[parlvote_sentiment$rating < 3] <- "0"
 
 # optionally: convert 0 = negative, 1 = positive
 #reviews_50[reviews_50 == "pos"] <- 1
@@ -215,7 +215,7 @@ reviews_plot
 twitter_plot
 parlvote_plot
 ```
-
+### ADDITIONAL
 # Harry Potter - Dataset
 ```{r}
 # load harry potter dataset 
