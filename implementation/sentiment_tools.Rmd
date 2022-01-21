@@ -74,7 +74,26 @@ twitter_sentiment <- get_sentiment(twitter, c("afinn","lsd", "vader"))
 parlvote_sentiment <- get_sentiment(parlvote, c("afinn","lsd", "vader"))
 
 parlvote_sentiment
+#write.csv(parlvote_sentiment, "datasets/parlvote_sentiment.csv", row.names = FALSE)
 ```
+# Optional Step: Normalize Lexicon Scores
+```{r}
+# min/max normalization from 0 to 1
+normalize <- function(x, na.rm = TRUE){
+  return((x-min(x)) / (max(x)-min(x)))
+}
+
+# min/max normalization from -1 to 1
+normalize2 <- function(x){
+  return(2* ((x - min(x)) / (max(x)-min(x)))-1)
+  }
+
+parlvote_sentiment$afinn_norm <- normalize2(parlvote_sentiment$afinn)
+parlvote_sentiment$lsd_norm <- normalize2(parlvote_sentiment$lsd)
+parlvote_sentiment$vader_norm <- normalize2(parlvote_sentiment$vader)
+```
+
+
 # 3. Step: Calculate Statistics
 ```{r}
 # convert to binary results
@@ -211,9 +230,18 @@ parlvote_plot <- ggplot(parlvote_dfm,aes(x = id,y = value)) +
                 facet_wrap(~ variable, ncol = 1, scales="free_y")+
                 ggtitle("ParlVote Sentiments")
 
+parlvote_norm_dfm <- melt(head(parlvote_sentiment,50)[,c('id','afinn_norm','lsd_norm','vader_norm')],id.vars = 1)
+
+parlvote_norm_plot <- ggplot(parlvote_norm_dfm,aes(x = id,y = value)) + 
+                geom_bar(aes(fill = variable),stat = "identity",position = "dodge")+
+                facet_wrap(~ variable, ncol = 1, scales="free_y")+
+                ggtitle("ParlVote Sentiments")
+
+
 reviews_plot
 twitter_plot
 parlvote_plot
+parlvote_norm_plot
 ```
 ### ADDITIONAL
 # Harry Potter - Dataset
