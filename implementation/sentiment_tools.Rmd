@@ -76,8 +76,8 @@ parlvote_sentiment <- get_sentiment(parlvote, c("afinn","lsd", "vader"))
 parlvote_sentiment
 #write.csv(parlvote_sentiment, "datasets/parlvote_sentiment.csv", row.names = FALSE)
 ```
-# Optional Step: Normalize Lexicon Scores
 ```{r}
+# NORMALIZATION
 # min/max normalization from 0 to 1
 normalize <- function(x, na.rm = TRUE){
   return((x-min(x)) / (max(x)-min(x)))
@@ -88,78 +88,107 @@ normalize2 <- function(x){
   return(2* ((x - min(x)) / (max(x)-min(x)))-1)
   }
 
-parlvote_sentiment$afinn_norm <- normalize2(parlvote_sentiment$afinn)
-parlvote_sentiment$lsd_norm <- normalize2(parlvote_sentiment$lsd)
-parlvote_sentiment$vader_norm <- normalize2(parlvote_sentiment$vader)
-```
-
-
-# 3. Step: Calculate Statistics
-```{r}
-# convert to binary results
-get_binary <- function(dataframes, type){
-  for(df in dataframes){
-    df$afinn_binary[df$afinn > 0] <- "pos"
-    df$afinn_binary[df$afinn <= 0] <- "neg"
-        
-    df$lsd_binary[df$lsd > 0] <- "pos"
-    df$lsd_binary[df$lsd <= 0] <- "neg"
-        
-    df$vader_binary[df$vader > 0] <- "pos"
-    df$vader_binary[df$vader <= 0] <- "neg"
-        
-    df$rating_binary[df$rating >= 3] <- "pos"
-    df$rating_binary[df$rating < 3] <- "neg"
-    if(type == "01"){
-      df[df == "pos"] <- 1
-      df[df == "neg"] <- 0
+# LEXICON SCORES
+# complete function to get lexicon scores
+get_sentiment <- function(data, lexicons, normalize = TRUE){
+  
+  for(lex in lexicons){
+    if(lex == "afinn"){
+      
+    data$afinn <- textstat_valence(tokens(data$text), afinn, normalize="dictionary")$sentiment
+    }
+    
+    if(lex == "lsd"){
+    data$lsd<- textstat_polarity(tokens(data$text), data_dictionary_LSD2015)$sentiment
+    }
+    
+    if(lex == "vader"){
+    data$vader <- vader_df(data$text)$compound
     }
   }
-  return(dataframes)
+  if(normalize==TRUE){
+    data$afinn <- normalize2(data$afinn)
+    data$lsd <- normalize2(data$lsd)
+    #data$vader <- normalize2(data$vader) # vader compound score is already normalized
+  }
+  data[is.na(data)] <- 0
+  return(data)
 }
 
+reviews_sentiment <- get_sentiment(reviews, c("afinn","lsd", "vader"))
+twitter_sentiment <- get_sentiment(twitter, c("afinn","lsd", "vader"))
+parlvote_sentiment <- get_sentiment(parlvote, c("afinn","lsd", "vader"))
 
-x <- get_binary(list(reviews_sentiment, twitter_sentiment, parlvote_sentiment), "01")
+twitter_sentiment
+
+# to do -> round values up to 3 
+# 
+
+#normalize2(twitter_sentiment$vader)
+#
+twitter_sentiment
+#write.csv(parlvote_sentiment, "datasets/parlvote_sentiment.csv", row.names = FALSE)
+```
+# 3. Step: Calculate Statistics
+```{r}
+# Convert final values into ternary (1 = positive, 0 = neutral, -1 = negative) format for evaluation and comparison
+# 
+# Arg:
+#   df: input data frame that contains the columns to be converted into ternary format
+#   to_change: column names that should be converted into ternary format
+#   gold: goldstandard, i.e. rating, which has to be changed to ternary format
+#   
+# Returns: 
+#   data frame with converted values
+
+get_binary <- function(df, to_change, gold){
+  df %>% 
+    mutate_at(to_change, function(x){
+      # mutate values greater than 0 to 1 (positive), equal to 0 to 0 (neutral) and smaller than 0 to -1 (negative)
+      case_when(x > 0 ~ 1, x < 0 ~ -1, x == 0 ~ 0)}) %>% 
+    
+    mutate_at(gold, function(x){
+      # if x is between 0-5, mutate values greater than 0 to 1, equal to 0 to 0 and smaller than 0 to -1
+      case_when(between(x,0,5) & x > 3 ~ 1, between(x,0,5) & x == 3 ~ 0, between(x,0,5) & x < 3 ~ -1,
+        x == "Positive" ~ 1, x == "Negative" ~ -1, x == "Neutral" ~ 0)})
+}
+
+twitter_binary <- get_binary(twitter_sentiment, c("afinn","vader","lsd"), "rating")
+twitter_binary
+twitter_sentiment
+reviews_binary <- get_binary(reviews_sentiment, c("afinn","vader","lsd"), "rating")
 ```
 
 ```{r}
-reviews_sentiment$afinn_binary[reviews_sentiment$afinn > 0] <- "1"
-reviews_sentiment$afinn_binary[reviews_sentiment$afinn <= 0] <- "0"
-reviews_sentiment$lsd_binary[reviews_sentiment$lsd > 0] <- "1"
-reviews_sentiment$lsd_binary[reviews_sentiment$lsd <= 0] <- "0"
-reviews_sentiment$vader_binary[reviews_sentiment$vader > 0] <- "1"
-reviews_sentiment$vader_binary[reviews_sentiment$vader <= 0] <- "0"
-reviews_sentiment$rating_binary[reviews_sentiment$rating >= 3] <- "1"
-reviews_sentiment$rating_binary[reviews_sentiment$rating < 3] <- "0"
+# Function to get statistics (accuracy, precision, recall) of data frame for specific lexicon
+#
+# Arg: 
+#   df: data frame that we want statistics of
+#   lexicon: binary/ternary lexicon that should be evaluated
+#
+# Returns:
+#   overall accuracy score
+#   data frame with statistics
 
-twitter_sentiment$afinn_binary[twitter_sentiment$afinn > 0] <- "1"
-twitter_sentiment$afinn_binary[twitter_sentiment$afinn <= 0] <- "0"
-twitter_sentiment$lsd_binary[twitter_sentiment$lsd > 0] <- "1"
-twitter_sentiment$lsd_binary[twitter_sentiment$lsd <= 0] <- "0"
-twitter_sentiment$vader_binary[twitter_sentiment$vader > 0] <- "1"
-twitter_sentiment$vader_binary[twitter_sentiment$vader <= 0] <- "0"
-twitter_sentiment$rating_binary[twitter_sentiment$rating == "Positive"] <- "1"
-twitter_sentiment$rating_binary[twitter_sentiment$rating == "Negative"] <- "0"
-twitter_sentiment$rating_binary[twitter_sentiment$rating == "Neutral"] <- NA
+  
+get_statistics <- function(df, lexicon){
+  cm <- confusionMatrix(factor(df[[lexicon]]), factor(df$rating), mode="prec_recall")
+  acc <- (as.data.frame(cm$overall))["Accuracy",]
+  stats <- as.data.frame(cm$byClass)
+  
+  # check how to return two statements
+  return(stats)
+}
 
-parlvote_sentiment$afinn_binary[parlvote_sentiment$afinn > 0] <- "1"
-parlvote_sentiment$afinn_binary[parlvote_sentiment$afinn <= 0] <- "0"
-parlvote_sentiment$lsd_binary[parlvote_sentiment$lsd > 0] <- "1"
-parlvote_sentiment$lsd_binary[parlvote_sentiment$lsd <= 0] <- "0"
-parlvote_sentiment$vader_binary[parlvote_sentiment$vader > 0] <- "1"
-parlvote_sentiment$vader_binary[parlvote_sentiment$vader <= 0] <- "0"
-
-# optionally: convert 0 = negative, 1 = positive
-#reviews_50[reviews_50 == "pos"] <- 1
-#reviews_50[reviews_50 == "neg"] <- 0
-```
-
-```{r}
-parlvote_sentiment
+get_statistics(reviews_binary, "afinn")
 ```
 
 
+
 ```{r}
+### TEST FUNCTION
+
+
 get_statistics <- function(df) {
   #statistics <- data.frame(matrix(ncol=4, nrow=0))
   #x <- c("accuracy", "precision", "recall", "F1")
@@ -167,10 +196,10 @@ get_statistics <- function(df) {
   statistics <- data.frame(matrix(ncol=1, nrow=0))
   colnames(statistics) <- "accuracy"
   
-  lex1 <- "afinn_binary"
-  lex2 <- "lsd_binary"
-  lex3 <- "vader_binary"
-  gold <- "rating_binary"
+  lex1 <- "afinn"
+  lex2 <- "lsd"
+  lex3 <- "vader"
+  gold <- "rating"
   
   lexicons <- c(lex1,lex2,lex3)
   
@@ -200,11 +229,14 @@ get_statistics <- function(df) {
   
 }
 
-review_stats <- get_statistics(reviews_sentiment)
+review_stats <- get_statistics(reviews_binary)
 #twitter_stats <- get_statistics(twitter_sentiment)
 #parlvote_stats <- get_statistics(parlvote_sentiment)
 
 review_stats
+```
+```{r}
+
 ```
 
 # 4. Step: Plot Data 
