@@ -37,8 +37,11 @@ reviews <- readRDS(file="datasets/red_review.rds")
 twitter <- readRDS(file="datasets/red_twitter.rds")
 parlvote <- readRDS(file="datasets/red_parl_vote.rds")
 
-# load lexicon
+# load lexicons
 afinn <- data_dictionary_AFINN
+lsd <- data_dictionary_LSD2015
+
+lsd
 ```
 
 ```{r}
@@ -47,89 +50,78 @@ twitter
 parlvote
 ```
 # 2. Step: Perform Sentiment Analysis
+### Normalize Scores
 ```{r}
-# complete function to get lexicon scores
-get_sentiment <- function(data, lexicons){
-  
-  for(lex in lexicons){
-    if(lex == "afinn"){
-      
-    data$afinn <- textstat_valence(tokens(data$text), afinn, normalize="dictionary")$sentiment
-    }
-    
-    if(lex == "lsd"){
-    data$lsd<- textstat_polarity(tokens(data$text), data_dictionary_LSD2015)$sentiment
-    }
-    
-    if(lex == "vader"){
-    data$vader <- vader_df(data$text)$compound
-    }
-  }
-  data[is.na(data)] <- 0
-  return(data)
-}
+# DATA NORMALIZATION
+# Normalize data via minimun/maximum normalization, either by scaling values from 0 to 1 or -1 to 1
+# 
+# Arg:
+#   x: input values (e.g. column of data frame)
+#   
+# Returns: 
+#   normalized data
 
-reviews_sentiment <- get_sentiment(reviews, c("afinn","lsd", "vader"))
-twitter_sentiment <- get_sentiment(twitter, c("afinn","lsd", "vader"))
-parlvote_sentiment <- get_sentiment(parlvote, c("afinn","lsd", "vader"))
 
-parlvote_sentiment
-#write.csv(parlvote_sentiment, "datasets/parlvote_sentiment.csv", row.names = FALSE)
-```
-```{r}
-# NORMALIZATION
 # min/max normalization from 0 to 1
 normalize <- function(x, na.rm = TRUE){
-  return((x-min(x)) / (max(x)-min(x)))
-}
+  return((x-min(x)) / (max(x)-min(x)))}
 
 # min/max normalization from -1 to 1
-normalize2 <- function(x){
-  return(2* ((x - min(x)) / (max(x)-min(x)))-1)
-  }
+normalize2 <- function(x, na.rm = TRUE){
+  return(2* ((x - min(x)) / (max(x)-min(x)))-1)}
+```
 
-# LEXICON SCORES
-# complete function to get lexicon scores
-get_sentiment <- function(data, lexicons, normalize = TRUE){
+### Calculate Sentiment Scores
+```{r}
+# Calculate sentiment scores for different lexicons and input data frames
+# 
+# Arg:
+#   data: input data frame
+#   lexicons: names of lexicons that should be used for sentiment scoring
+#   normalize: TRUE or FALSE, to optionally normalize sentiment scores
+#   
+# Returns: 
+#   Data frame with (normalized) sentiment sores for chosen lexicons
+
+get_sentiment <- function(df, lexicons, normalize = TRUE){
   
+  # for each lexicon, get sentiment scores and save scores in new column of data frame
   for(lex in lexicons){
+    
     if(lex == "afinn"){
-      
-    data$afinn <- textstat_valence(tokens(data$text), afinn, normalize="dictionary")$sentiment
-    }
+    df$afinn <- round(textstat_valence(tokens(df$text), afinn, normalize="dictionary")$sentiment,3)}
     
     if(lex == "lsd"){
-    data$lsd<- textstat_polarity(tokens(data$text), data_dictionary_LSD2015)$sentiment
-    }
+    df$lsd<- round(textstat_polarity(tokens(df$text), lsd)$sentiment,3)}
     
     if(lex == "vader"){
-    data$vader <- vader_df(data$text)$compound
-    }
+    df$vader <- round(vader_df(df$text)$compound,3)}
   }
+  
+  # normalize sentiment scores if TRUE, VADER scores are already normalized
   if(normalize==TRUE){
-    data$afinn <- normalize2(data$afinn)
-    data$lsd <- normalize2(data$lsd)
-    #data$vader <- normalize2(data$vader) # vader compound score is already normalized
+    df$afinn <- round(normalize2(df$afinn), 3)
+    df$lsd <- round(normalize2(df$lsd), 3)
   }
-  data[is.na(data)] <- 0
-  return(data)
+  
+  # set sentiment scores to 0 if NA
+  df[is.na(df)] <- 0
+  
+  return(df)
 }
 
 reviews_sentiment <- get_sentiment(reviews, c("afinn","lsd", "vader"))
 twitter_sentiment <- get_sentiment(twitter, c("afinn","lsd", "vader"))
 parlvote_sentiment <- get_sentiment(parlvote, c("afinn","lsd", "vader"))
 
-twitter_sentiment
-
-# to do -> round values up to 3 
-# 
-
-#normalize2(twitter_sentiment$vader)
-#
-twitter_sentiment
+# to save data frame as csv file
 #write.csv(parlvote_sentiment, "datasets/parlvote_sentiment.csv", row.names = FALSE)
+
+reviews_sentiment
 ```
+
 # 3. Step: Calculate Statistics
+### Convert data into ternary format
 ```{r}
 # Convert final values into ternary (1 = positive, 0 = neutral, -1 = negative) format for evaluation and comparison
 # 
@@ -153,12 +145,12 @@ get_binary <- function(df, to_change, gold){
         x == "Positive" ~ 1, x == "Negative" ~ -1, x == "Neutral" ~ 0)})
 }
 
-twitter_binary <- get_binary(twitter_sentiment, c("afinn","vader","lsd"), "rating")
-twitter_binary
-twitter_sentiment
 reviews_binary <- get_binary(reviews_sentiment, c("afinn","vader","lsd"), "rating")
-```
+twitter_binary <- get_binary(twitter_sentiment, c("afinn","vader","lsd"), "rating")
+parlvote_binary <- get_binary(parlvote_sentiment, c("afinn","vader","lsd"), "rating")
 
+```
+### Calculate Accuracy, Precision, Recall
 ```{r}
 # Function to get statistics (accuracy, precision, recall) of data frame for specific lexicon
 #
@@ -169,74 +161,28 @@ reviews_binary <- get_binary(reviews_sentiment, c("afinn","vader","lsd"), "ratin
 # Returns:
 #   overall accuracy score
 #   data frame with statistics
-
   
 get_statistics <- function(df, lexicon){
+  
+  # create confusion matrix (via caret library) to get statistics of data frame
   cm <- confusionMatrix(factor(df[[lexicon]]), factor(df$rating), mode="prec_recall")
+  
   acc <- (as.data.frame(cm$overall))["Accuracy",]
   stats <- as.data.frame(cm$byClass)
+  results <- list(acc, stats)
   
   # check how to return two statements
-  return(stats)
+  return(results)
 }
 
-get_statistics(reviews_binary, "afinn")
-```
+reviews_afinn.acc <- get_statistics(reviews_binary, "afinn")[[1]][1]
+reviews_afinn.stats <- get_statistics(reviews_binary, "afinn")[2]
 
+reviews_lsd.acc <- get_statistics(reviews_binary, "lsd")[[1]][1]
+reviews_lsd.stats <- get_statistics(reviews_binary, "lsd")[2]
 
-
-```{r}
-### TEST FUNCTION
-
-
-get_statistics <- function(df) {
-  #statistics <- data.frame(matrix(ncol=4, nrow=0))
-  #x <- c("accuracy", "precision", "recall", "F1")
-  #colnames(statistics) <- x
-  statistics <- data.frame(matrix(ncol=1, nrow=0))
-  colnames(statistics) <- "accuracy"
-  
-  lex1 <- "afinn"
-  lex2 <- "lsd"
-  lex3 <- "vader"
-  gold <- "rating"
-  
-  lexicons <- c(lex1,lex2,lex3)
-  
-  for(lex in lexicons){
-    cf <- confusionMatrix(factor(df[[lex]]),factor(df[[gold]]))
-    accuracy <- cf[[3]][1]
-    #confusion_matrix <- table(ACTUAL=df[[gold]], PREDICTED=df[[lex]])
-    #TN <- confusion_matrix[1]
-    #FN <- confusion_matrix[2]
-    #FP <- confusion_matrix[3]
-    #TP <- confusion_matrix[4]
-    
-    # calculate statistics
-    #precision <- TP/(TP+FP)
-    #accuracy <- (TP+TN)/(TP+TN+FP+FN)
-    #recall <- TP/(TP+FN)
-    #F1 <- (2*precision*recall)/(precision+recall)
-  
-    # add to table
-    #output <- c(accuracy,precision, recall, F1)
-    #statistics[lex,] = rbind(statistics[[lex]], output)
-    statistics[lex,] = rbind(statistics[[lex]], accuracy)
-    #print(output)
-    }
-    
-  return(statistics)
-  
-}
-
-review_stats <- get_statistics(reviews_binary)
-#twitter_stats <- get_statistics(twitter_sentiment)
-#parlvote_stats <- get_statistics(parlvote_sentiment)
-
-review_stats
-```
-```{r}
-
+reviews_vader.acc <- get_statistics(reviews_binary, "vader")[[1]][1]
+reviews_vader.stats <- get_statistics(reviews_binary, "vader")[2]
 ```
 
 # 4. Step: Plot Data 
@@ -262,19 +208,65 @@ parlvote_plot <- ggplot(parlvote_dfm,aes(x = id,y = value)) +
                 facet_wrap(~ variable, ncol = 1, scales="free_y")+
                 ggtitle("ParlVote Sentiments")
 
-parlvote_norm_dfm <- melt(head(parlvote_sentiment,50)[,c('id','afinn_norm','lsd_norm','vader_norm')],id.vars = 1)
+#parlvote_norm_dfm <- melt(head(parlvote_sentiment,50)[,c('id','afinn_norm','lsd_norm','vader_norm')],id.vars = 1)
 
-parlvote_norm_plot <- ggplot(parlvote_norm_dfm,aes(x = id,y = value)) + 
-                geom_bar(aes(fill = variable),stat = "identity",position = "dodge")+
-                facet_wrap(~ variable, ncol = 1, scales="free_y")+
-                ggtitle("ParlVote Sentiments")
+#parlvote_norm_plot <- ggplot(parlvote_norm_dfm,aes(x = id,y = value)) + 
+              #  geom_bar(aes(fill = variable),stat = "identity",position = "dodge")+
+               # facet_wrap(~ variable, ncol = 1, scales="free_y")+
+                #ggtitle("ParlVote Sentiments")
 
 
 reviews_plot
 twitter_plot
 parlvote_plot
-parlvote_norm_plot
+#parlvote_norm_plot
 ```
+### Plot important words
+```{r}
+# optional
+```
+
+### Ranking of texts per lexicon
+```{r}
+# sort per corpus and per tool
+reviews_afinn.sort <- reviews_sentiment[order(reviews_sentiment$afinn, decreasing=TRUE),]
+
+reviews_lsd.sort <- reviews_sentiment[order(reviews_sentiment$lsd, decreasing=TRUE),]
+
+reviews_vader.sort <- reviews_sentiment[order(reviews_sentiment$vader, decreasing=TRUE),]
+
+
+reviews_afinn.sort
+reviews_lsd.sort
+reviews_vader.sort
+```
+
+# 5. Step: Evaluation (Notes)
+- evaluate data/ compare data
+- accuracy, precision, recall 
+- pearsons coefficient 
+
+Comparison Groups:
+- compare binary (normalized) versions
+  - each lexicon and data set
+- compare continuous (normalized) versions
+  - each lexicon and data set
+- compare top n words per sentiment per tool? (= contribution to sentiment)
+- compare ranking (Stede's idea):
+  - rank texts per corpus and compare across tools -> is order similar?
+- tool's performance
+  - how is performance across domains?
+  - is binary more accurate than continuous scoring?
+  - 
+
+
+
+
+
+
+
+
+
 ### ADDITIONAL
 # Harry Potter - Dataset
 ```{r}
@@ -293,7 +285,7 @@ for(i in seq_along(titles)) {
         
         clean <- tibble(chapter = seq_along(books[[i]]),
                         text = books[[i]]) %>%
-             #unnest_tokens(word, text) %>%
+             unnest_tokens(word, text) %>%
              mutate(book = titles[i]) %>%
              select(book, everything())
 
@@ -307,6 +299,23 @@ series
 # tokenize hp1
 #hp1_tokenized <- tokens_tolower(tokens(philosophers_stone, remove_punct = TRUE)) 
 ```
+```{r}
+afinn_hp <- series %>%
+       # group_by(book, chapter) %>% # add word for single word scores 
+        #inner_join(get_sentiments("afinn")) %>%
+        inner_join(textstat_valence(series$tokens,afinn)$sentiment) %>%
+      #  group_by(book, chapter) %>% # add word for single word scores
+        #summarise(sentiment = sum(value)) %>%
+       # summarise(sentiment = mean(value, na.rm = TRUE)) %>%
+        mutate(method = "AFINN")  #%>%
+       # ggplot(aes(chapter, sentiment, fill = book)) +
+       #   geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+       #   facet_wrap(~ book, ncol = 2, scales = "free_x")
+
+afinn_hp
+```
+
+
 ### Harry Potter - AFINN Lexicon
 ```{r}
 afinn_hp2 <- series %>%
@@ -510,57 +519,6 @@ plot <- ggplot(reviews_50, aes(doc_id, vader, fill = doc_id)) + # plot sentiment
           ggtitle("Vader Reviews")
 plot 
 ```
-# Statistics 
-```{r}
-# convert to binary results
-reviews_50$afinn_binary[reviews_50$afinn > 0] <- "pos"
-reviews_50$afinn_binary[reviews_50$afinn <= 0] <- "neg"
-
-reviews_50$lsd_binary[reviews_50$lsd > 0] <- "pos"
-reviews_50$lsd_binary[reviews_50$lsd <= 0] <- "neg"
-
-reviews_50$vader_binary[reviews_50$vader > 0] <- "pos"
-reviews_50$vader_binary[reviews_50$vader <= 0] <- "neg"
-
-reviews_50$rating_binary[reviews_50$rating >= 3] <- "pos"
-reviews_50$rating_binary[reviews_50$rating < 3] <- "neg"
-
-# optionally: convert 0 = negative, 1 = positive
-reviews_50[reviews_50 == "pos"] <- 1
-reviews_50[reviews_50 == "neg"] <- 0
-```
-
-```{r}
-actual_values <- twitter_sentiment$rating_binary
-predict_values <- twitter_sentiment$afinn_binary
-
-# create confusion matrix 
-confusion_matrix <- table(ACTUAL=actual_values, PREDICTED=predict_values)
-
-# assign values from matrix to true/false positives/negatives
-TN <- confusion_matrix[1]
-FN <- confusion_matrix[2]
-FP <- confusion_matrix[3]
-TP <- confusion_matrix[4]
-
-# calculate statistics
-precision <- TP/(TP+FP)
-accuracy <- (TP+TN)/(TP+TN+FP+FN)
-recall <- TP/(TP+FN)
-F1 <- (2*precision*recall)/(precision+recall)
-
-precision
-accuracy
-recall
-confusion_matrix[3]
-```
-```{r}
-twitter_sentiment[twitter_sentiment == NA] <- 0
-
-twitter_sentiment[is.na(twitter_sentiment)] <- 0
-
-twitter_sentiment
-```
 
 ```{r}
 get_statistics <- function(df) {
@@ -599,6 +557,38 @@ get_statistics <- function(df) {
 get_statistics(test)
 ```
 
+### Test Functions
+```{r}
+```{r}
+# complete function to get lexicon scores
+get_sentiment <- function(data, lexicons){
+  
+  for(lex in lexicons){
+    if(lex == "afinn"){
+      
+    data$afinn <- textstat_valence(tokens(data$text), afinn, normalize="dictionary")$sentiment
+    }
+    
+    if(lex == "lsd"){
+    data$lsd<- textstat_polarity(tokens(data$text), data_dictionary_LSD2015)$sentiment
+    }
+    
+    if(lex == "vader"){
+    data$vader <- vader_df(data$text)$compound
+    }
+  }
+  data[is.na(data)] <- 0
+  return(data)
+}
+
+reviews_sentiment <- get_sentiment(reviews, c("afinn","lsd", "vader"))
+twitter_sentiment <- get_sentiment(twitter, c("afinn","lsd", "vader"))
+parlvote_sentiment <- get_sentiment(parlvote, c("afinn","lsd", "vader"))
+
+parlvote_sentiment
+#write.csv(parlvote_sentiment, "datasets/parlvote_sentiment.csv", row.names = FALSE)
+```
+```
 
 
 
