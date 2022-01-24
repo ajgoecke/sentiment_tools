@@ -40,8 +40,6 @@ parlvote <- readRDS(file="datasets/red_parl_vote.rds")
 # load lexicons
 afinn <- data_dictionary_AFINN
 lsd <- data_dictionary_LSD2015
-
-lsd
 ```
 
 ```{r}
@@ -149,6 +147,8 @@ reviews_binary <- get_binary(reviews_sentiment, c("afinn","vader","lsd"), "ratin
 twitter_binary <- get_binary(twitter_sentiment, c("afinn","vader","lsd"), "rating")
 parlvote_binary <- get_binary(parlvote_sentiment, c("afinn","vader","lsd"), "rating")
 
+parlvote_binary
+
 ```
 ### Calculate Accuracy, Precision, Recall
 ```{r}
@@ -183,6 +183,9 @@ reviews_lsd.stats <- get_statistics(reviews_binary, "lsd")[2]
 
 reviews_vader.acc <- get_statistics(reviews_binary, "vader")[[1]][1]
 reviews_vader.stats <- get_statistics(reviews_binary, "vader")[2]
+
+reviews_afinn.stats
+reviews_afinn.acc
 ```
 
 # 4. Step: Plot Data 
