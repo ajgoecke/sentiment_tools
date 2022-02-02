@@ -1,6 +1,8 @@
 ---
 title: "Comparison of Sentiment Tools across Domains"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 ```{r}
 # load required libraries
@@ -36,6 +38,7 @@ require(quanteda.sentiment)
 reviews <- readRDS(file="datasets/red_review.rds")
 twitter <- readRDS(file="datasets/red_twitter.rds")
 parlvote <- readRDS(file="datasets/red_parl_vote.rds")
+amazon <- readRDS(file="datasets/red_ama.rds")
 
 # load lexicons
 afinn <- data_dictionary_AFINN
@@ -46,6 +49,7 @@ lsd <- data_dictionary_LSD2015
 reviews
 twitter
 parlvote
+amazon
 ```
 # 2. Step: Perform Sentiment Analysis
 ### Normalize Scores
@@ -111,6 +115,7 @@ get_sentiment <- function(df, lexicons, normalize = TRUE){
 reviews_sentiment <- get_sentiment(reviews, c("afinn","lsd", "vader"))
 twitter_sentiment <- get_sentiment(twitter, c("afinn","lsd", "vader"))
 parlvote_sentiment <- get_sentiment(parlvote, c("afinn","lsd", "vader"))
+amazon_sentiment <- get_sentiment(amazon, c("afinn", "lsd", "vader"))
 
 # to save data frame as csv file
 #write.csv(parlvote_sentiment, "datasets/parlvote_sentiment.csv", row.names = FALSE)
@@ -259,7 +264,7 @@ Comparison Groups:
   - rank texts per corpus and compare across tools -> is order similar?
 - tool's performance
   - how is performance across domains?
-  - is binary more accurate than continuous scoring?
+  - is discrete format more accurate than continuous scoring?
   - 
 
 
