@@ -85,7 +85,7 @@ normalize2 <- function(x, na.rm = TRUE){
 # Returns: 
 #   Data frame with (normalized) sentiment sores for chosen lexicons
 
-get_sentiment <- function(df, lexicons, normalize = TRUE){
+get_sentiment <- function(df, lexicons, normalize = FALSE){
   
   # for each lexicon, get sentiment scores and save scores in new column of data frame
   for(lex in lexicons){
@@ -122,6 +122,13 @@ amazon_sentiment <- get_sentiment(amazon, c("afinn", "lsd", "vader"))
 
 reviews_sentiment
 ```
+```{r}
+# write data to csv file 
+#write.csv(parlvote_sentiment, "datasets/sentiment_data/parlvote_sentiment.csv", row.names = FALSE)
+#write.csv(amazon_sentiment, "datasets/sentiment_data/amazon_sentiment.csv", row.names = FALSE)
+#write.csv(twitter_sentiment, "datasets/sentiment_data/twitter_sentiment.csv", row.names = FALSE)
+#write.csv(reviews_sentiment, "datasets/sentiment_data/reviews_sentiment.csv", row.names = FALSE)
+```
 
 # 3. Step: Calculate Statistics
 ### Convert data into ternary format
@@ -151,7 +158,8 @@ get_binary <- function(df, to_change, gold){
 reviews_binary <- get_binary(reviews_sentiment, c("afinn","vader","lsd"), "rating")
 twitter_binary <- get_binary(twitter_sentiment, c("afinn","vader","lsd"), "rating")
 parlvote_binary <- get_binary(parlvote_sentiment, c("afinn","vader","lsd"), "rating")
-
+amazon_binary <- get_binary(amazon_sentiment, c("afinn","vader","lsd"), "rating")
+  
 parlvote_binary
 
 ```
@@ -164,19 +172,20 @@ parlvote_binary
 #   lexicon: binary/ternary lexicon that should be evaluated
 #
 # Returns:
-#   overall accuracy score
-#   data frame with statistics
+#   overall accuracy score (first element in output list)
+#   data frame with statistics (second element in output list)
   
 get_statistics <- function(df, lexicon){
   
   # create confusion matrix (via caret library) to get statistics of data frame
   cm <- confusionMatrix(factor(df[[lexicon]]), factor(df$rating), mode="prec_recall")
   
+  # retrieve accuracy
   acc <- (as.data.frame(cm$overall))["Accuracy",]
+  # retrieve statistics
   stats <- as.data.frame(cm$byClass)
   results <- list(acc, stats)
-  
-  # check how to return two statements
+
   return(results)
 }
 
@@ -192,7 +201,6 @@ reviews_vader.stats <- get_statistics(reviews_binary, "vader")[2]
 reviews_afinn.stats
 reviews_afinn.acc
 ```
-
 # 4. Step: Plot Data 
 ```{r}
 # plot columns
