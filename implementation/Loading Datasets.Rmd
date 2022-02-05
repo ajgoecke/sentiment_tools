@@ -70,19 +70,23 @@ reviews <- readRDS(filename)
 
 ```{r}
 
-
+#filter out any non english reviews
+reviews[reviews$language== "english",]
 
 red_review <- data.frame(text=character(),
                  rating=integer(), 
                  stringsAsFactors=FALSE) 
 
-#filter for only rating and text columns and only rows that have an English tag
-for (i in 0:5){
-hold<- subset(reviews, rating == i| language=="english", select = c("text","rating"))
+#filter for only rating and text columns and make equal distribution
 
-#combine them into a dataframe with 1000 entries and an equal rating distribution 
-red_review <- rbind( red_review, hold[sample(nrow(hold), 167), ])
+for (i in 0:5){
+
+hold<- subset(reviews, rating == i, select = c("text","rating"))
+
+red_review <- rbind(red_review, hold[sample(nrow(hold), 167), ])
 }
+
+
 #throw out the last two entries to get exactly 1000 entries
 red_review<- red_review[-c(1001,1002), ]
 
@@ -92,6 +96,8 @@ red_review<-as.data.frame(red_review)
 red_review$id <- 1:nrow(red_review) 
 red_review<-red_review[,c(3,1,2)]
  
+red_review%>%
+  count(rating)
 
 ```
 
@@ -183,6 +189,12 @@ red_ama <- rbind(red_ama, hold[sample(nrow(hold), 200), ])
 #add ID
 red_ama$id <- 1:nrow(red_ama) 
 red_ama<-red_ama[,c(3,1,2)]
+
+
+red_ama%>%
+  count(rating)
+#ama_rev%>%
+ # count(rating)
 ```
 
 Kyoto Corpus (?)
