@@ -85,7 +85,7 @@ normalize2 <- function(x, na.rm = TRUE){
 # Returns: 
 #   Data frame with (normalized) sentiment sores for chosen lexicons
 
-get_sentiment <- function(df, lexicons, normalize = FALSE){
+get_sentiment <- function(df, lexicons, normalize = TRUE){
   
   # for each lexicon, get sentiment scores and save scores in new column of data frame
   for(lex in lexicons){
@@ -127,7 +127,7 @@ reviews_sentiment
 #write.csv(parlvote_sentiment, "datasets/sentiment_data/parlvote_sentiment.csv", row.names = FALSE)
 #write.csv(amazon_sentiment, "datasets/sentiment_data/amazon_sentiment.csv", row.names = FALSE)
 #write.csv(twitter_sentiment, "datasets/sentiment_data/twitter_sentiment.csv", row.names = FALSE)
-#write.csv(reviews_sentiment, "datasets/sentiment_data/reviews_sentiment.csv", row.names = FALSE)
+write.csv(reviews_sentiment, "datasets/sentiment_data/reviews_sentiment_norm.csv", row.names = FALSE)
 ```
 
 # 3. Step: Calculate Statistics
