@@ -1,0 +1,285 @@
+---
+title: "Evaluation"
+output: html_notebook
+---
+```{r}
+#install.packages('caret', dependencies = TRUE)
+#install.packages("janitor")
+install.packages("sqldf")
+library(caret) 
+library(tidyverse)
+library(plyr)
+library (janitor)
+
+```
+
+
+```{r}
+#Read in Data 
+
+#Amazon
+ama<-amazon_sentiment_norm <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_data/amazon_sentiment_norm.csv")
+
+parl<-parlvote_sentiment_norm <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_data/parlvote_sentiment_norm.csv")
+
+rev<-reviews_sentiment_norm <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_data/reviews_sentiment_norm.csv")
+
+twitter<-twitter_sentiment_norm <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_data/twitter_sentiment_norm.csv")
+
+```
+
+
+
+```{r}
+#The function calculates the choosen metrics for the dataframe
+#In: Dataframe, Flags for choosen metric
+#Out: A list of results:
+#1: The confusion matrix and additional information
+#2: The F1 score
+#3: The accuracy score
+get_metrics <- function(frame,f1=FALSE,matrix=FALSE,accuracy=FALSE) {
+
+#The gold labels are the ratings of the frame (pre normalied to -1 and 1)
+gold<-frame[,"rating"]
+ 
+#make a subframe of only the lexica values
+names <- c("afinn", "lsd", "vader")
+names<-frame[names]
+
+#conf <- vector(mode = "list", length = 0) 
+acc <- vector(mode = "list", length = 0) 
+Fone <- vector(mode = "list", length = 0) 
+
+for(i in 1:ncol(names)) {
+  
+  #make prediction for the lexica 
+  #!! right now only binary prediction
+  pred<-names[,i]
+  pred[pred>0] <- 1
+  pred[pred<=0] <- -1
+  
+  
+  if(matrix==TRUE){
+    #pred<-as.factor(pred)
+    #gold<-as.factor(gold)
+    hold<-do.call(rbind, Map(data.frame, pred=pred, gold=gold))
+   #conf<-confusionMatrix(data=pred, reference = gold) 
+    conf<-table(hold$pred, hold$gold)
+  }
+  
+  if(accuracy==TRUE){
+    right = as.integer(0) 
+    wrong=as.integer(0)
+    
+    for (i in 1:length(pred)) { 
+      if (pred[i]==gold[i]){
+        right=right+1}
+      
+      if (pred[i]!=gold[i]){
+        wrong=wrong+1}
+      }
+   
+   acc_score<-right/(right+wrong)
+   acc<-c(acc,acc_score) 
+  }
+  
+  if (f1==TRUE){
+  
+  pred<-as.factor(pred)
+  gold<-as.factor(gold)
+
+  precision <- posPredValue(pred, gold, positive="1")
+  recall <- sensitivity(pred, gold, positive="1")
+
+  F1 <- (2 * precision * recall) / (precision + recall)
+  Fone <- c(Fone, F1)
+  
+  }
+} 
+
+result <- list( conf, Fone,acc )
+ 
+return (result)
+
+}
+```
+
+```{r}
+#Rating normalisation
+parl$rating[parl$rating==0] <- -1
+
+ama$rating[ama$rating<4] <- -1
+ama$rating[ama$rating>3] <- 1
+
+rev$rating[rev$rating<3] <- -1
+rev$rating[rev$rating>2] <- 1
+
+twitter$rating[twitter$rating == "Neutral"] <- 0
+twitter$rating[twitter$rating == "Positive"] <- 1
+twitter$rating[twitter$rating == "Negative"] <- -1
+twitter<-transform(twitter, rating = as.numeric(rating))
+
+twit_red<-twitter[!(twitter$rating==0 ),]
+
+
+
+#rev%>%
+#  count(rating)
+
+
+```
+
+```{r}
+#Get choosen per Corpus metrics
+metrics_ama<-get_metrics(ama,matrix=TRUE,f1=TRUE,accuracy = TRUE)
+
+metrics_parl<-get_metrics(parl,matrix=TRUE,f1=TRUE,accuracy = TRUE)
+
+metrics_reviews<-get_metrics(rev,matrix=TRUE,f1=TRUE,accuracy = TRUE)
+
+metrics_twitter_red<-get_metrics(twit_red,matrix=TRUE,f1=TRUE,accuracy = TRUE)
+
+```
+
+```{r}
+#library(data.table)
+#m1<-metrics_reviews[1]
+
+#print(m1)
+#m2<-metrics_ama[1]
+#m1<-llply(m1, unlist)
+#m2<-llply(m2, unlist)
+
+#m1<-as.data.frame(m1)
+#m2<-as.data.frame(m2)
+
+
+#library(plyr)
+#w<-ddply(merge(m1, m2, all.x=TRUE), 
+#  .(Var1, Var2), summarise, Freq=sum(Freq))
+
+#require(sqldf)
+#library
+#tmp <- sqldf("select * from m1 left join m2 using (Var1, Var2)")
+
+#print(typeof(m1))
+
+
+```
+
+
+```{r}
+#The function takes the output of "get_metrics" and combines the dataframes of the different corpora into one dataframe.
+#The number indicates which metric is choosen:
+##1: The confusion matrix and additional information
+#2: The F1 score
+#3: The accuracy score
+
+get_comb_metric<-function(ama,rev,parl,twit,num){
+  
+ama<-ama[num]
+
+rev<-rev[num]
+
+parl<-parl[num]
+
+twit<-twit[num]
+
+
+ama<-llply(ama, unlist)
+rev<-llply(rev, unlist)
+parl<-llply(parl, unlist)
+twit<-llply(twit, unlist)
+
+comb<-do.call(rbind, Map(data.frame, ama=ama, books=rev, parl=parl,twitter=twit))
+names <- c("afinn", "lsd", "vader")
+
+comb$id <- names 
+comb<-comb[,c(5,1,2,3,4)]
+
+return (comb)
+}
+```
+
+
+
+
+
+```{r}
+#Sort the frames by the lexicas for ANOVA
+acc_comb<-get_comb_metric(metrics_ama,metrics_reviews,metrics_parl,metrics_twitter_red,3)
+
+
+acc_t<-t(acc_comb)
+acc_t<-acc_t%>%
+row_to_names(row_number = 1)
+acc_t <- as.data.frame(acc_t)
+st_acccorp <- stack(acc_t)
+```
+```{r}
+res.aov <- aov(values ~ ind, data = st_acccorp)
+summary(res.aov)
+print("now tukey")
+TukeyHSD(res.aov)
+```
+
+```{r}
+#Sort the frames by their lexica for ANOVA
+f1_comb<-get_comb_metric(metrics_ama,metrics_reviews,metrics_parl,metrics_twitter_red,2)
+
+
+f1_t<-t(f1_comb)
+f1_t<-f1_t%>%
+row_to_names(row_number = 1)
+
+f1_t <- as.data.frame(f1_t)
+
+st_f1corp <- stack(f1_t)
+```
+```{r}
+#Tukey test on diference between Lexica
+#no statistical difference
+res.aov <- aov(values ~ ind, data = st_f1corp)
+summary(res.aov)
+print("now tukey")
+TukeyHSD(res.aov)
+```
+
+
+
+
+
+
+```{r}
+#Sort the frames by the Corpora for Anova
+
+f1_comb<-get_comb_metric(metrics_ama,metrics_reviews,metrics_parl,metrics_twitter_red,2)
+f1_comb <- data.frame(f1_comb[,-1], row.names = f1_comb[,1])
+st_f1 <- stack(f1_comb)
+
+```
+```{r}
+
+acc_comb<-get_comb_metric(metrics_ama,metrics_reviews,metrics_parl,metrics_twitter_red,3)
+acc_co <- data.frame(acc_comb[,-1], row.names = acc_comb[,1])
+st_acc <- stack(acc_co)
+```
+
+
+```{r}
+#Do ANOVA and Tukey test on Accuracy
+#shows that the corpora are statistically different
+
+res.aov <- aov(values ~ ind, data = st_acc)
+summary(res.aov)
+print("now tukey")
+TukeyHSD(res.aov)
+```
+```{r}
+#Do ANOVA and Tukey test in F1
+
+res.aov <- aov(values ~ ind, data = st_f1)
+summary(res.aov)
+print("now tukey")
+TukeyHSD(res.aov)
+```
