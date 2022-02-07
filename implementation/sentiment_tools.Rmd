@@ -143,7 +143,7 @@ write.csv(reviews_sentiment, "datasets/sentiment_data/reviews_sentiment_norm.csv
 # Returns: 
 #   data frame with converted values
 
-get_binary <- function(df, to_change, gold){
+get_discrete <- function(df, to_change, gold){
   df %>% 
     mutate_at(to_change, function(x){
       # mutate values greater than 0 to 1 (positive), equal to 0 to 0 (neutral) and smaller than 0 to -1 (negative)
@@ -155,10 +155,10 @@ get_binary <- function(df, to_change, gold){
         x == "Positive" ~ 1, x == "Negative" ~ -1, x == "Neutral" ~ 0)})
 }
 
-reviews_binary <- get_binary(reviews_sentiment, c("afinn","vader","lsd"), "rating")
-twitter_binary <- get_binary(twitter_sentiment, c("afinn","vader","lsd"), "rating")
-parlvote_binary <- get_binary(parlvote_sentiment, c("afinn","vader","lsd"), "rating")
-amazon_binary <- get_binary(amazon_sentiment, c("afinn","vader","lsd"), "rating")
+reviews_discrete <- get_discrete(reviews_sentiment, c("afinn","vader","lsd"), "rating")
+twitter_discrete <- get_discrete(twitter_sentiment, c("afinn","vader","lsd"), "rating")
+parlvote_discrete <- get_discrete(parlvote_sentiment, c("afinn","vader","lsd"), "rating")
+amazon_discrete <- get_discrete(amazon_sentiment, c("afinn","vader","lsd"), "rating")
   
 parlvote_binary
 
@@ -239,9 +239,114 @@ parlvote_plot
 ```
 ### Plot important words
 ```{r}
-# optional
-```
+# alternative sentiment function (can be used as final one), added get_tokens
+get_sentiment_tokens2 <- function(df, lexicons, normalize = TRUE, get_tokens = TRUE){
+   
+   if(get_tokens==TRUE){
+     df <- df %>%
+       unnest_tokens(token,text)
+     
+     tok = df$token
+     
+     #print(tok)
+   }else{
+     tok = tokens(df$text)
+   }
+   # for each lexicon, get sentiment scores and save scores in new column of data frame
+   for(lex in lexicons){
+     
+     if(lex == "afinn"){
+     df$afinn <- round(textstat_valence(tok, afinn, normalize="dictionary")$sentiment,3)}
+     
+     if(lex == "lsd"){
+     df$lsd<- round(textstat_polarity(tok, lsd)$sentiment,3)}
+     
+     if(lex == "vader"){
+     df$vader <- round(vader_df(tok)$compound,3)}
+   }
+   
+   # normalize sentiment scores if TRUE, VADER scores are already normalized
+   if(normalize==TRUE){
+     df$afinn <- round(normalize2(df$afinn), 3)
+     df$lsd <- round(normalize2(df$lsd), 3)
+   }
+   
+   # set sentiment scores to 0 if NA
+   df[is.na(df)] <- 0
+   
+   return(df)
+ }
 
+reviews_tok_sent <- get_sentiment_tokens2(reviews, c("afinn","lsd", "vader"))
+twitter_tok_sent <- get_sentiment_tokens2(twitter, c("afinn","lsd", "vader"))
+parlvote_tok_sent <- get_sentiment_tokens2(parlvote, c("afinn","lsd", "vader"))
+amazon_tok_sent <- get_sentiment_tokens2(amazon, c("afinn","lsd", "vader"))
+
+# remove stopwords 
+data(stop_words)
+ 
+reviews_tok_discrete <- get_discrete(reviews_tok_sent, c("afinn","vader","lsd"), "rating")
+ 
+# get word counts per discrete score ("positive", "negative", "neutral", i.e. 1,-1,0)
+reviews_afinn.word_counts <- reviews_tok_discrete %>%
+   count(token, afinn, sort = TRUE) %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+reviews_lsd.word_counts <- reviews_tok_discrete %>%
+   count(token, lsd, sort = TRUE) %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+reviews_vader.word_counts <- reviews_tok_discrete %>%
+   count(token, vader, sort = TRUE) %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+# plot top n words for each sentiment 
+#n = 20 
+topn_reviews_afinn.plot <- reviews_afinn.word_counts %>%
+         group_by(afinn) %>%
+         top_n(20) %>%
+         ggplot(aes(reorder(token, n), n, fill = afinn)) +
+           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+           facet_wrap(~afinn, scales = "free_y") +
+           labs(y = "contribution to sentiment", x = NULL) +
+           coord_flip()+
+           ggtitle("Reviews: Top 20 Words per Sentiment (Afinn)")
+ 
+topn_reviews_lsd.plot <- reviews_lsd.word_counts %>%
+         group_by(lsd) %>%
+         top_n(20) %>%
+         ggplot(aes(reorder(token, n), n, fill = lsd)) +
+           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+           facet_wrap(~lsd, scales = "free_y") +
+           labs(y = "contribution to sentiment", x = NULL) +
+           coord_flip()+
+           ggtitle("Reviews: Top 20 Words per Sentiment (LSD)")
+ 
+topn_reviews_vader.plot <- reviews_vader.word_counts %>%
+         group_by(vader) %>%
+         top_n(20) %>%
+         ggplot(aes(reorder(token, n), n, fill = vader)) +
+           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+           facet_wrap(~vader, scales = "free_y") +
+           labs(y = "contribution to sentiment", x = NULL) +
+           coord_flip()+
+           ggtitle("Reviews: Top 20 Words per Sentiment (VADER)")
+
+topn_reviews_afinn.plot
+topn_reviews_lsd.plot
+topn_reviews_vader.plot
+#reviews_vader.word_counts
+
+#library("ggpubr")
+ 
+#figure <- ggarrange(topn_reviews_afinn.plot, topn_reviews_lsd.plot,topn_reviews_vader.plot,
+                    labels = c("Afinn", "LSD", "VADER"),
+                    ncol = 1, nrow = 3)
+#figure
+```
 ### Ranking of texts per lexicon
 ```{r}
 # sort per corpus and per tool
@@ -273,341 +378,4 @@ Comparison Groups:
 - tool's performance
   - how is performance across domains?
   - is discrete format more accurate than continuous scoring?
-  - 
-
-
-
-
-
-
-
-
-
-### ADDITIONAL
-# Harry Potter - Dataset
-```{r}
-# load harry potter dataset 
-titles <- c("Philosopher's Stone", "Chamber of Secrets", "Prisoner of Azkaban",
-            "Goblet of Fire", "Order of the Phoenix", "Half-Blood Prince",
-            "Deathly Hallows")
-
-books <- list(philosophers_stone, chamber_of_secrets, prisoner_of_azkaban,
-           goblet_of_fire, order_of_the_phoenix, half_blood_prince,
-           deathly_hallows)
-  
-series <- tibble()
-
-for(i in seq_along(titles)) {
-        
-        clean <- tibble(chapter = seq_along(books[[i]]),
-                        text = books[[i]]) %>%
-             unnest_tokens(word, text) %>%
-             mutate(book = titles[i]) %>%
-             select(book, everything())
-
-        series <- rbind(series, clean)
-}
-
-series$book <- factor(series$book, levels = rev(titles))
-
-series
-#book_groups <- series %>% group_by(book, chapter)
-# tokenize hp1
-#hp1_tokenized <- tokens_tolower(tokens(philosophers_stone, remove_punct = TRUE)) 
-```
-```{r}
-afinn_hp <- series %>%
-       # group_by(book, chapter) %>% # add word for single word scores 
-        #inner_join(get_sentiments("afinn")) %>%
-        inner_join(textstat_valence(series$tokens,afinn)$sentiment) %>%
-      #  group_by(book, chapter) %>% # add word for single word scores
-        #summarise(sentiment = sum(value)) %>%
-       # summarise(sentiment = mean(value, na.rm = TRUE)) %>%
-        mutate(method = "AFINN")  #%>%
-       # ggplot(aes(chapter, sentiment, fill = book)) +
-       #   geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
-       #   facet_wrap(~ book, ncol = 2, scales = "free_x")
-
-afinn_hp
-```
-
-
-### Harry Potter - AFINN Lexicon
-```{r}
-afinn_hp2 <- series %>%
-        group_by(book, chapter) %>% # add word for single word scores 
-        inner_join(get_sentiments("afinn")) %>%
-        group_by(book, chapter) %>% # add word for single word scores
-        #summarise(sentiment = sum(value)) %>%
-        summarise(sentiment = mean(value, na.rm = TRUE)) %>%
-        mutate(method = "AFINN")  %>%
-        ggplot(aes(chapter, sentiment, fill = book)) +
-          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
-          facet_wrap(~ book, ncol = 2, scales = "free_x")
-
-afinn_hp2
-
-#ggsave(plot = afinn, width = 15, height = 15, dpi = 300, filename = "afinn_hp_mean.png")
-```
-
-# Lexicoder: HP
-```{r}
-# select only the "negative" and "positive" categories
-#data_dictionary_LSD2015_pos_neg <- data_dictionary_LSD2015[1:2]
-#hp1_lsd <- tokens_lookup(hp1_tokenized, dictionary = data_dictionary_LSD2015_pos_neg)
-
-polarity(data_dictionary_LSD2015) <- 
-  list(pos = c("positive", "neg_negative"), neg = c("negative", "neg_positive"))
-
-hp1_lsd <- textstat_polarity(hp1_tokenized, data_dictionary_LSD2015)
-
-hp1_lsd_tokens <- tokens_lookup(hp1_tokenized, data_dictionary_LSD2015, nested_scope = "dictionary", exclusive = FALSE)
-hp1_lsd.df <- as.data.frame.matrix(hp1_lsd)
-hp1_lsd.df$chapter <- 1:nrow(hp1_lsd.df)
-
-plot <- ggplot(hp1_lsd, aes(x =hp1_lsd.df$chapter, y=sentiment)) +
-          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE)
-plot + ylim(-1.0, 1.0) + labs(y="sentiment", x = "chapter") + ggtitle("HP1 - Lexicoder")
-```
-# AFINN: HP
-```{r}
-hp1_afinn <- textstat_valence(hp1_tokenized, afinn, normalize="dictionary")
-
-hp1_afinn.df <- as.data.frame.matrix(hp1_afinn)
-hp1_afinn.df$chapter <- 1:nrow(hp1_afinn.df)
-
-plot <- ggplot(hp1_afinn.df, aes(x =hp1_afinn.df$chapter, y=sentiment)) +
-          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE)
-plot + ylim(-1.0, 1.0) + labs(y="sentiment", x = "chapter") + ggtitle("HP1 - AFINN")
-```
-# VADER: HP
-```{r}
-get_vader(philosophers_stone[1])
-
-hp1_vader <- vader_df(philosophers_stone)
-hp1_vader$chapter <- 1:nrow(hp1_vader)
-
-plot <- ggplot(hp1_vader, aes(x =chapter, y=compound)) +
-          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE)
-plot + ylim(-5.0, 5.0) + labs(y="sentiment", x = "chapter") + ggtitle("HP1 - VADER")
-```
-# QUANTEDA.SENTIMENT
-# AFINN: HP
-```{r}
-# Work with quanteda.sentiment on HP corpus:
-# convert tibble to dataframe
-series.df <- as.data.frame(series)
-
-# tokenize books
-series_tokenized <- series.df %>%
-  unnest_tokens(tokens, text)
-
-# apply afinn lexicon
-series_tokenized$afinn <- textstat_valence(series_tokenized$tokens, afinn)$sentiment
-
-# replace all 0 values with na
-series_tokenized[series_tokenized == 0] <- NA
-
-series_tokenized %>%
-  group_by(book, chapter) %>% # group df by book and chapter to get sentiment per chapter
-  summarise(sentiment = mean(afinn, na.rm = TRUE)) %>% # calculate mean w/o regarding na values
-  mutate(method = "AFINN") %>% # add column with method 
-        ggplot(aes(chapter, sentiment, fill = book)) + # plot sentiment of books
-          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
-          facet_wrap(~ book, ncol = 2, scales = "free_x") +
-          ggtitle("AFINN HP")
-```
-# Lexicoder: HP  
-```{r}
-# Work with quanteda.sentiment on HP corpus:
-# apply lexicoder lexicon
-series$lsd <- textstat_polarity(tokens(series$text), data_dictionary_LSD2015)$sentiment 
-
-#series.df <- as.data.frame(series)
-
-plot <- ggplot(series, aes(chapter, lsd, fill = book)) + # plot sentiment of books
-          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
-          facet_wrap(~ book, ncol = 2, scales = "free_x") +
-          ggtitle("Lexicoder HP")
-plot 
-```
-
-# Vader: HP
-```{r}
-# apply vader lexicon to all HP books
-series$vader <- vader_df(series$text)$compound
-
-#series.df <- as.data.frame(series)
-
-plot <- ggplot(series, aes(chapter, lsd, fill = book)) + # plot sentiment of books
-          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
-          facet_wrap(~ book, ncol = 2, scales = "free_x") +
-          ggtitle("VADER HP")
-plot 
-```
-
-# REVIEWS DATASET
-```{r}
-# load dataset
-reviews <- readtext("datasets/goodreads_reviews_children_2.json", text_field = "review_text")
-
-# convert to dataframe
-reviews.df <- as.data.frame(reviews)
-
-# add doc_id (i.e. according to index)
-reviews.df$doc_id <- 1:nrow(reviews.df)
-```
-
-### Sample Dataset
-```{r}
-# get random sample of 50 reviews 
-reviews_sample <- reviews.df[sample(1:nrow(reviews.df), 50,
-   replace=FALSE),]
-
-# get first 50 rows of data 
-reviews_50 <- head(reviews.df,50)
-reviews_50 = subset(reviews_50, select = c(doc_id,text,rating))
-```
-### Get Translations of Dataset 
-```{r}
-# either via corpus 
-reviews.corpus <- corpus(reviews)
-docvars(reviews.corpus, "language") <- textcat(reviews.corpus)
-reviews_en <- corpus_subset(reviews.corpus, language == "english", drop_docid = TRUE)
-
-# or via dataframe logic
-reviews.df$language <- textcat(reviews.df$text)
-```
-
-### Sentiment Analysis on Reviews Dataset
-
-#### AFINN
-```{r}
-# Afinn
-# tokenize 
-reviews_tokenized <- reviews_50 %>%
-  unnest_tokens(tokens, text)
-
-# apply afinn lexicon
-reviews_tokenized$afinn <- textstat_valence(reviews_tokenized$tokens, afinn)$sentiment
-
-# replace all 0 values with na
-reviews_tokenized[reviews_tokenized == 0] <- NA
-
-# calculate mean scores for tokens per doc
-afinn_scores <- reviews_tokenized %>%
-  group_by(doc_id) %>% # group df by doc_id to get mean sentiment score
-  summarise(total = mean(afinn, na.rm = TRUE)) #%>% # calculate mean w/o regarding na values
-
-# add afinn scores to df 
-reviews_50$afinn <- afinn_scores$total
-
-# different version to get plot 
-reviews_tokenized %>%
-  group_by(doc_id) %>% # group df by book and chapter to get sentiment per chapter
-  #reviews_tokenized$sentiment = mean(afinn, na.rm = TRUE) %>%
-  summarise(sentiment = mean(afinn, na.rm = TRUE)) %>% # calculate mean w/o regarding na values
-  mutate(method = "AFINN") %>% # add column with method 
-        ggplot(aes(doc_id, sentiment, fill = doc_id)) + # plot sentiment of books
-          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
-          #facet_wrap(~ doc_id, ncol = 2, scales = "free_x") +
-          ggtitle("AFINN Reviews")
-```
-#### LEXICODER
-```{r}
-# apply lexicoder lexicon
-reviews_50$lsd <- textstat_polarity(tokens(reviews_50$text), data_dictionary_LSD2015)$sentiment 
-#series.df <- as.data.frame(series)
-
-plot <- ggplot(reviews_50, aes(doc_id, lsd, fill = doc_id)) + # plot sentiment of books
-          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
-          #facet_wrap(~ doc_id, ncol = 2, scales = "free_x") +
-          ggtitle("Lexicoder Reviews")
-plot 
-```
-#### Vader
-```{r}
-reviews_50$vader <- vader_df(reviews_50$text)$compound
-
-plot <- ggplot(reviews_50, aes(doc_id, vader, fill = doc_id)) + # plot sentiment of books
-          geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
-          #facet_wrap(~ doc_id, ncol = 2, scales = "free_x") +
-          ggtitle("Vader Reviews")
-plot 
-```
-
-```{r}
-get_statistics <- function(df) {
-  statistics <- data.frame(matrix(ncol=4, nrow=0))
-  x <- c("accuracy", "precision", "recall", "F1")
-  colnames(statistics) <- x
-  lex1 <- "afinn_binary"
-  lex2 <- "lsd_binary"
-  lex3 <- "vader_binary"
-  gold <- "rating_binary"
-  
-  lexicons <- c(lex1,lex2,lex3)
-  
-  for(lex in lexicons){
-    confusion_matrix <- table(ACTUAL=df[[gold]], PREDICTED=df[[lex]])
-    TN <- confusion_matrix[1]
-    FN <- confusion_matrix[2]
-    FP <- confusion_matrix[3]
-    TP <- confusion_matrix[4]
-  
-    # calculate statistics
-    precision <- TP/(TP+FP)
-    accuracy <- (TP+TN)/(TP+TN+FP+FN)
-    recall <- TP/(TP+FN)
-    F1 <- (2*precision*recall)/(precision+recall)
-  
-    # add to table
-    output <- c(accuracy,precision, recall, F1)
-    statistics[lex,] = rbind(statistics[[lex]], output)
-    }
-    
-  return(statistics)
-  
-}
-
-get_statistics(test)
-```
-
-### Test Functions
-```{r}
-```{r}
-# complete function to get lexicon scores
-get_sentiment <- function(data, lexicons){
-  
-  for(lex in lexicons){
-    if(lex == "afinn"){
-      
-    data$afinn <- textstat_valence(tokens(data$text), afinn, normalize="dictionary")$sentiment
-    }
-    
-    if(lex == "lsd"){
-    data$lsd<- textstat_polarity(tokens(data$text), data_dictionary_LSD2015)$sentiment
-    }
-    
-    if(lex == "vader"){
-    data$vader <- vader_df(data$text)$compound
-    }
-  }
-  data[is.na(data)] <- 0
-  return(data)
-}
-
-reviews_sentiment <- get_sentiment(reviews, c("afinn","lsd", "vader"))
-twitter_sentiment <- get_sentiment(twitter, c("afinn","lsd", "vader"))
-parlvote_sentiment <- get_sentiment(parlvote, c("afinn","lsd", "vader"))
-
-parlvote_sentiment
-#write.csv(parlvote_sentiment, "datasets/parlvote_sentiment.csv", row.names = FALSE)
-```
-```
-
-
-
-
-
 
