@@ -71,6 +71,11 @@ normalize <- function(x, na.rm = TRUE){
 # min/max normalization from -1 to 1
 normalize2 <- function(x, na.rm = TRUE){
   return(2* ((x - min(x)) / (max(x)-min(x)))-1)}
+
+# 
+normalize_afinn <- function(x, na.rm = TRUE){
+  return(2* ((x - (-5)) / (5-(-5)))-1)}
+
 ```
 
 ### Calculate Sentiment Scores
@@ -94,7 +99,7 @@ get_sentiment <- function(df, lexicons, normalize = TRUE){
     df$afinn <- round(textstat_valence(tokens(df$text), afinn, normalize="dictionary")$sentiment,3)}
     
     if(lex == "lsd"){
-    df$lsd<- round(textstat_polarity(tokens(df$text), lsd)$sentiment,3)}
+    df$lsd<- round(textstat_polarity(tokens(df$text), lsd, fun=sent_relpropdiff)$sentiment,3)}
     
     if(lex == "vader"){
     df$vader <- round(vader_df(df$text)$compound,3)}
@@ -102,8 +107,8 @@ get_sentiment <- function(df, lexicons, normalize = TRUE){
   
   # normalize sentiment scores if TRUE, VADER scores are already normalized
   if(normalize==TRUE){
-    df$afinn <- round(normalize2(df$afinn), 3)
-    df$lsd <- round(normalize2(df$lsd), 3)
+    df$afinn <- round(normalize_afinn(df$afinn), 3)
+    #df$lsd <- round(normalize2(df$lsd), 3)
   }
   
   # set sentiment scores to 0 if NA
@@ -124,10 +129,10 @@ reviews_sentiment
 ```
 ```{r}
 # write data to csv file 
-#write.csv(parlvote_sentiment, "datasets/sentiment_data/parlvote_sentiment.csv", row.names = FALSE)
-#write.csv(amazon_sentiment, "datasets/sentiment_data/amazon_sentiment.csv", row.names = FALSE)
-#write.csv(twitter_sentiment, "datasets/sentiment_data/twitter_sentiment.csv", row.names = FALSE)
-#write.csv(reviews_sentiment, "datasets/sentiment_data/reviews_sentiment_norm.csv", row.names = FALSE)
+write.csv(parlvote_sentiment, "datasets/sentiment_data/parlvote_sentiment_norm1.csv", row.names = FALSE)
+write.csv(amazon_sentiment, "datasets/sentiment_data/amazon_sentiment_norm1.csv", row.names = FALSE)
+write.csv(twitter_sentiment, "datasets/sentiment_data/twitter_sentiment_norm1.csv", row.names = FALSE)
+write.csv(reviews_sentiment, "datasets/sentiment_data/reviews_sentiment_norm_norm1.csv", row.names = FALSE)
 ```
 
 # 3. Step: Calculate Statistics
@@ -221,7 +226,7 @@ parlvote_dfm <- melt(head(parlvote_sentiment,50)[,c('id','afinn','lsd','vader')]
 
 parlvote_plot <- ggplot(parlvote_dfm,aes(x = id,y = value)) + 
                 geom_bar(aes(fill = variable),stat = "identity",position = "dodge")+
-                facet_wrap(~ variable, ncol = 1, scales="free_y")+
+                #facet_wrap(~ variable, ncol = 1, scales="free_y")+
                 ggtitle("ParlVote Sentiments")
 
 #parlvote_norm_dfm <- melt(head(parlvote_sentiment,50)[,c('id','afinn_norm','lsd_norm','vader_norm')],id.vars = 1)
@@ -232,9 +237,16 @@ parlvote_plot <- ggplot(parlvote_dfm,aes(x = id,y = value)) +
                 #ggtitle("ParlVote Sentiments")
 
 
+amazon_dfm <- melt(head(amazon_sentiment,50)[,c('id','afinn','lsd','vader')],id.vars = 1)
+
+amazon_plot <- ggplot(amazon_dfm,aes(x = id,y = value)) + 
+                geom_bar(aes(fill = variable),stat = "identity",position = "dodge")+
+                #facet_wrap(~ variable, ncol = 1, scales="free_y")+
+                ggtitle("Amazon Sentiments")
 reviews_plot
 twitter_plot
 parlvote_plot
+amazon_plot
 #parlvote_norm_plot
 ```
 ### Plot important words
@@ -259,7 +271,7 @@ get_sentiment_tokens2 <- function(df, lexicons, normalize = TRUE, get_tokens = T
      df$afinn <- round(textstat_valence(tok, afinn, normalize="dictionary")$sentiment,3)}
      
      if(lex == "lsd"){
-     df$lsd<- round(textstat_polarity(tok, lsd)$sentiment,3)}
+     df$lsd<- round(textstat_polarity(tok, lsd, fun=sent_relpropdiff)$sentiment,3)}
      
      if(lex == "vader"){
      df$vader <- round(vader_df(tok)$compound,3)}
@@ -267,8 +279,8 @@ get_sentiment_tokens2 <- function(df, lexicons, normalize = TRUE, get_tokens = T
    
    # normalize sentiment scores if TRUE, VADER scores are already normalized
    if(normalize==TRUE){
-     df$afinn <- round(normalize2(df$afinn), 3)
-     df$lsd <- round(normalize2(df$lsd), 3)
+     df$afinn <- round(normalize_afinn(df$afinn), 3)
+     #df$lsd <- round(normalize2(df$lsd), 3)
    }
    
    # set sentiment scores to 0 if NA
@@ -350,7 +362,6 @@ topn_reviews_vader.plot
                     #ncol = 1, nrow = 3)
 #figure
 ```
-
 ```{r}
 # important words as csv file for each corpus
 
@@ -413,6 +424,7 @@ twitter_vader.word_counts <- twitter_tok_discrete %>%
 
 
 ```
+
 ```{r}
 topn_amazon_afinn.plot <- amazon_afinn.word_counts %>%
          group_by(afinn) %>%
