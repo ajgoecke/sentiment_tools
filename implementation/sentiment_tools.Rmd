@@ -127,7 +127,7 @@ reviews_sentiment
 #write.csv(parlvote_sentiment, "datasets/sentiment_data/parlvote_sentiment.csv", row.names = FALSE)
 #write.csv(amazon_sentiment, "datasets/sentiment_data/amazon_sentiment.csv", row.names = FALSE)
 #write.csv(twitter_sentiment, "datasets/sentiment_data/twitter_sentiment.csv", row.names = FALSE)
-write.csv(reviews_sentiment, "datasets/sentiment_data/reviews_sentiment_norm.csv", row.names = FALSE)
+#write.csv(reviews_sentiment, "datasets/sentiment_data/reviews_sentiment_norm.csv", row.names = FALSE)
 ```
 
 # 3. Step: Calculate Statistics
@@ -307,7 +307,8 @@ reviews_vader.word_counts <- reviews_tok_discrete %>%
 #n = 20 
 topn_reviews_afinn.plot <- reviews_afinn.word_counts %>%
          group_by(afinn) %>%
-         top_n(20) %>%
+         #top_n(20) %>%
+         slice(1:20) %>%
          ggplot(aes(reorder(token, n), n, fill = afinn)) +
            geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
            facet_wrap(~afinn, scales = "free_y") +
@@ -317,7 +318,8 @@ topn_reviews_afinn.plot <- reviews_afinn.word_counts %>%
  
 topn_reviews_lsd.plot <- reviews_lsd.word_counts %>%
          group_by(lsd) %>%
-         top_n(20) %>%
+         #top_n(20) %>%
+         slice(1:20) %>%
          ggplot(aes(reorder(token, n), n, fill = lsd)) +
            geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
            facet_wrap(~lsd, scales = "free_y") +
@@ -327,7 +329,8 @@ topn_reviews_lsd.plot <- reviews_lsd.word_counts %>%
  
 topn_reviews_vader.plot <- reviews_vader.word_counts %>%
          group_by(vader) %>%
-         top_n(20) %>%
+         #top_n(20) %>%
+         slice(1:20) %>%
          ggplot(aes(reorder(token, n), n, fill = vader)) +
            geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
            facet_wrap(~vader, scales = "free_y") +
@@ -413,7 +416,8 @@ twitter_vader.word_counts <- twitter_tok_discrete %>%
 ```{r}
 topn_amazon_afinn.plot <- amazon_afinn.word_counts %>%
          group_by(afinn) %>%
-         top_n(20) %>%
+         #top_n(20) %>%
+         slice(1:20) %>%
          ggplot(aes(reorder(token, n), n, fill = afinn)) +
            geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
            facet_wrap(~afinn, scales = "free_y") +
@@ -423,7 +427,8 @@ topn_amazon_afinn.plot <- amazon_afinn.word_counts %>%
  
 topn_amazon_lsd.plot <- amazon_lsd.word_counts %>%
          group_by(lsd) %>%
-         top_n(20) %>%
+         #top_n(20) %>%
+         slice(1:20) %>%
          ggplot(aes(reorder(token, n), n, fill = lsd)) +
            geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
            facet_wrap(~lsd, scales = "free_y") +
@@ -433,13 +438,14 @@ topn_amazon_lsd.plot <- amazon_lsd.word_counts %>%
  
 topn_amazon_vader.plot <- amazon_vader.word_counts %>%
          group_by(vader) %>%
-         top_n(20) %>%
+         #top_n(20) %>%
+         slice(1:20) %>%
          ggplot(aes(reorder(token, n), n, fill = vader)) +
            geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
            facet_wrap(~vader, scales = "free_y") +
            labs(y = "contribution to sentiment", x = NULL) +
            coord_flip()+
-           ggtitle("amazon: Top 20 Words per Sentiment (VADER)")
+           ggtitle("Amazon: Top 20 Words per Sentiment (VADER)")
 
 topn_amazon_afinn.plot
 topn_amazon_lsd.plot
@@ -449,7 +455,8 @@ topn_amazon_vader.plot
 ```{r}
 topn_parlvote_afinn.plot <- parlvote_afinn.word_counts %>%
          group_by(afinn) %>%
-         top_n(20) %>%
+         #top_n(20) %>%
+         slice(1:20) %>%
          ggplot(aes(reorder(token, n), n, fill = afinn)) +
            geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
            facet_wrap(~afinn, scales = "free_y") +
@@ -459,7 +466,8 @@ topn_parlvote_afinn.plot <- parlvote_afinn.word_counts %>%
  
 topn_parlvote_lsd.plot <- parlvote_lsd.word_counts %>%
          group_by(lsd) %>%
-         top_n(20) %>%
+         #top_n(20) %>%
+        slice(1:20) %>%
          ggplot(aes(reorder(token, n), n, fill = lsd)) +
            geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
            facet_wrap(~lsd, scales = "free_y") +
@@ -469,7 +477,8 @@ topn_parlvote_lsd.plot <- parlvote_lsd.word_counts %>%
  
 topn_parlvote_vader.plot <- parlvote_vader.word_counts %>%
          group_by(vader) %>%
-         top_n(20) %>%
+         #top_n(20) %>%
+         slice(1:20) %>%
          ggplot(aes(reorder(token, n), n, fill = vader)) +
            geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
            facet_wrap(~vader, scales = "free_y") +
@@ -485,7 +494,8 @@ topn_parlvote_vader.plot
 ```{r}
 topn_twitter_afinn.plot <- twitter_afinn.word_counts %>%
          group_by(afinn) %>%
-         top_n(20) %>%
+         #top_n(20) %>%
+         slice(1:20) %>%
          ggplot(aes(reorder(token, n), n, fill = afinn)) +
            geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
            facet_wrap(~afinn, scales = "free_y") +
@@ -495,7 +505,8 @@ topn_twitter_afinn.plot <- twitter_afinn.word_counts %>%
  
 topn_twitter_lsd.plot <- twitter_lsd.word_counts %>%
          group_by(lsd) %>%
-         top_n(20) %>%
+         #top_n(20) %>%
+         slice(1:20) %>%
          ggplot(aes(reorder(token, n), n, fill = lsd)) +
            geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
            facet_wrap(~lsd, scales = "free_y") +
@@ -505,7 +516,8 @@ topn_twitter_lsd.plot <- twitter_lsd.word_counts %>%
  
 topn_twitter_vader.plot <- twitter_vader.word_counts %>%
          group_by(vader) %>%
-         top_n(20) %>%
+         #top_n(20) %>%
+         slice(1:20) %>%
          ggplot(aes(reorder(token, n), n, fill = vader)) +
            geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
            facet_wrap(~vader, scales = "free_y") +
@@ -516,6 +528,32 @@ topn_twitter_vader.plot <- twitter_vader.word_counts %>%
 topn_twitter_afinn.plot
 topn_twitter_lsd.plot
 topn_twitter_vader.plot
+```
+```{r}
+twitter_vader.word_counts
+```
+
+```{r}
+# write data to csv file 
+### TWITTER
+write.csv(twitter_vader.word_counts, "datasets/sentiment_data/twitter_vader_topn.csv", row.names = FALSE)
+write.csv(twitter_lsd.word_counts, "datasets/sentiment_data/twitter_lsd_topn.csv", row.names = FALSE)
+write.csv(twitter_afinn.word_counts, "datasets/sentiment_data/twitter_afinn_topn.csv", row.names = FALSE)
+
+### AMAZON
+write.csv(amazon_vader.word_counts, "datasets/sentiment_data/amazon_vader_topn.csv", row.names = FALSE)
+write.csv(amazon_lsd.word_counts, "datasets/sentiment_data/amazon_lsd_topn.csv", row.names = FALSE)
+write.csv(amazon_afinn.word_counts, "datasets/sentiment_data/amazon_afinn_topn.csv", row.names = FALSE)
+
+### REVIEWS
+write.csv(reviews_vader.word_counts, "datasets/sentiment_data/reviews_vader_topn.csv", row.names = FALSE)
+write.csv(reviews_lsd.word_counts, "datasets/sentiment_data/reviews_lsd_topn.csv", row.names = FALSE)
+write.csv(reviews_afinn.word_counts, "datasets/sentiment_data/reviews_afinn_topn.csv", row.names = FALSE)
+
+### PARLVOTE
+write.csv(parlvote_vader.word_counts, "datasets/sentiment_data/parlvote_vader_topn.csv", row.names = FALSE)
+write.csv(parlvote_lsd.word_counts, "datasets/sentiment_data/parlvote_lsd_topn.csv", row.names = FALSE)
+write.csv(parlvote_afinn.word_counts, "datasets/sentiment_data/parlvote_afinn_topn.csv", row.names = FALSE)
 ```
 
 ### Ranking of texts per lexicon
