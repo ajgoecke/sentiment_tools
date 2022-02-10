@@ -343,10 +343,181 @@ topn_reviews_vader.plot
 #library("ggpubr")
  
 #figure <- ggarrange(topn_reviews_afinn.plot, topn_reviews_lsd.plot,topn_reviews_vader.plot,
-                    labels = c("Afinn", "LSD", "VADER"),
-                    ncol = 1, nrow = 3)
+                    #labels = c("Afinn", "LSD", "VADER"),
+                    #ncol = 1, nrow = 3)
 #figure
 ```
+
+```{r}
+# important words as csv file for each corpus
+
+amazon_tok_discrete <- get_discrete(amazon_tok_sent, c("afinn","vader","lsd"), "rating")
+parlvote_tok_discrete <- get_discrete(parlvote_tok_sent, c("afinn","vader","lsd"), "rating")
+twitter_tok_discrete <- get_discrete(twitter_tok_sent, c("afinn","vader","lsd"), "rating")
+ 
+
+# get word counts per discrete score ("positive", "negative", "neutral", i.e. 1,-1,0)
+
+### AMAZON
+amazon_afinn.word_counts <- amazon_tok_discrete %>%
+   count(token, afinn, sort = TRUE) %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+amazon_lsd.word_counts <- amazon_tok_discrete %>%
+   count(token, lsd, sort = TRUE) %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+amazon_vader.word_counts <- amazon_tok_discrete %>%
+   count(token, vader, sort = TRUE) %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+### PARLVOTE
+
+parlvote_afinn.word_counts <- parlvote_tok_discrete %>%
+   count(token, afinn, sort = TRUE) %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+parlvote_lsd.word_counts <- parlvote_tok_discrete %>%
+   count(token, lsd, sort = TRUE) %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+parlvote_vader.word_counts <- parlvote_tok_discrete %>%
+   count(token, vader, sort = TRUE) %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+### TWITTER
+
+twitter_afinn.word_counts <- twitter_tok_discrete %>%
+   count(token, afinn, sort = TRUE) %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+twitter_lsd.word_counts <- twitter_tok_discrete %>%
+   count(token, lsd, sort = TRUE) %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+twitter_vader.word_counts <- twitter_tok_discrete %>%
+   count(token, vader, sort = TRUE) %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+
+```
+```{r}
+topn_amazon_afinn.plot <- amazon_afinn.word_counts %>%
+         group_by(afinn) %>%
+         top_n(20) %>%
+         ggplot(aes(reorder(token, n), n, fill = afinn)) +
+           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+           facet_wrap(~afinn, scales = "free_y") +
+           labs(y = "contribution to sentiment", x = NULL) +
+           coord_flip()+
+           ggtitle("Amazon: Top 20 Words per Sentiment (Afinn)")
+ 
+topn_amazon_lsd.plot <- amazon_lsd.word_counts %>%
+         group_by(lsd) %>%
+         top_n(20) %>%
+         ggplot(aes(reorder(token, n), n, fill = lsd)) +
+           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+           facet_wrap(~lsd, scales = "free_y") +
+           labs(y = "contribution to sentiment", x = NULL) +
+           coord_flip()+
+           ggtitle("Amazon: Top 20 Words per Sentiment (LSD)")
+ 
+topn_amazon_vader.plot <- amazon_vader.word_counts %>%
+         group_by(vader) %>%
+         top_n(20) %>%
+         ggplot(aes(reorder(token, n), n, fill = vader)) +
+           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+           facet_wrap(~vader, scales = "free_y") +
+           labs(y = "contribution to sentiment", x = NULL) +
+           coord_flip()+
+           ggtitle("amazon: Top 20 Words per Sentiment (VADER)")
+
+topn_amazon_afinn.plot
+topn_amazon_lsd.plot
+topn_amazon_vader.plot
+```
+
+```{r}
+topn_parlvote_afinn.plot <- parlvote_afinn.word_counts %>%
+         group_by(afinn) %>%
+         top_n(20) %>%
+         ggplot(aes(reorder(token, n), n, fill = afinn)) +
+           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+           facet_wrap(~afinn, scales = "free_y") +
+           labs(y = "contribution to sentiment", x = NULL) +
+           coord_flip()+
+           ggtitle("ParlVote: Top 20 Words per Sentiment (Afinn)")
+ 
+topn_parlvote_lsd.plot <- parlvote_lsd.word_counts %>%
+         group_by(lsd) %>%
+         top_n(20) %>%
+         ggplot(aes(reorder(token, n), n, fill = lsd)) +
+           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+           facet_wrap(~lsd, scales = "free_y") +
+           labs(y = "contribution to sentiment", x = NULL) +
+           coord_flip()+
+           ggtitle("ParlVote: Top 20 Words per Sentiment (LSD)")
+ 
+topn_parlvote_vader.plot <- parlvote_vader.word_counts %>%
+         group_by(vader) %>%
+         top_n(20) %>%
+         ggplot(aes(reorder(token, n), n, fill = vader)) +
+           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+           facet_wrap(~vader, scales = "free_y") +
+           labs(y = "contribution to sentiment", x = NULL) +
+           coord_flip()+
+           ggtitle("ParlVote: Top 20 Words per Sentiment (VADER)")
+
+topn_parlvote_afinn.plot
+topn_parlvote_lsd.plot
+topn_parlvote_vader.plot
+```
+
+```{r}
+topn_twitter_afinn.plot <- twitter_afinn.word_counts %>%
+         group_by(afinn) %>%
+         top_n(20) %>%
+         ggplot(aes(reorder(token, n), n, fill = afinn)) +
+           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+           facet_wrap(~afinn, scales = "free_y") +
+           labs(y = "contribution to sentiment", x = NULL) +
+           coord_flip()+
+           ggtitle("Twitter: Top 20 Words per Sentiment (Afinn)")
+ 
+topn_twitter_lsd.plot <- twitter_lsd.word_counts %>%
+         group_by(lsd) %>%
+         top_n(20) %>%
+         ggplot(aes(reorder(token, n), n, fill = lsd)) +
+           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+           facet_wrap(~lsd, scales = "free_y") +
+           labs(y = "contribution to sentiment", x = NULL) +
+           coord_flip()+
+           ggtitle("Twitter: Top 20 Words per Sentiment (LSD)")
+ 
+topn_twitter_vader.plot <- twitter_vader.word_counts %>%
+         group_by(vader) %>%
+         top_n(20) %>%
+         ggplot(aes(reorder(token, n), n, fill = vader)) +
+           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+           facet_wrap(~vader, scales = "free_y") +
+           labs(y = "contribution to sentiment", x = NULL) +
+           coord_flip()+
+           ggtitle("Twitter: Top 20 Words per Sentiment (VADER)")
+
+topn_twitter_afinn.plot
+topn_twitter_lsd.plot
+topn_twitter_vader.plot
+```
+
 ### Ranking of texts per lexicon
 ```{r}
 # sort per corpus and per tool
