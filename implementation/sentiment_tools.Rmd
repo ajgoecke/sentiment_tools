@@ -34,11 +34,19 @@ require(quanteda.sentiment)
 
 # 1. Step: Load Data & Lexicons
 ```{r}
-# load datasets
-reviews <- readRDS(file="datasets/red_review.rds")
-twitter <- readRDS(file="datasets/red_twitter.rds")
-parlvote <- readRDS(file="datasets/red_parl_vote.rds")
-amazon <- readRDS(file="datasets/red_ama.rds")
+# load baseline datasets
+reviews <- readRDS(file="datasets/baseline/books_config_base.rds")
+twitter <- readRDS(file="datasets/baseline/twitter_config_base.rds")
+parlvote <- readRDS(file="datasets/baseline/parl_config_base.rds")
+amazon <- readRDS(file="datasets/baseline/ama_config_base.rds")
+finance <- readRDS(file="datasets/baseline/fin_config_base.rds")
+
+# load preprocessed datasets
+reviews_config1 <- readRDS(file="datasets/config_1/book_config_1.rds")
+twitter_config1 <- readRDS(file="datasets/config_2/twitter_config_2.rds")
+parlvote_config1 <- readRDS(file="datasets/config_1/parl_config_1.rds")
+amazon_config1 <- readRDS(file="datasets/config_1/ama_config_1.rds")
+#finance_config1 <- readRDS(file="datasets/fin_config_1.rds")
 
 # load lexicons
 afinn <- data_dictionary_AFINN
@@ -50,6 +58,7 @@ reviews
 twitter
 parlvote
 amazon
+finance
 ```
 # 2. Step: Perform Sentiment Analysis
 ### Normalize Scores
@@ -63,22 +72,16 @@ amazon
 # Returns: 
 #   normalized data
 
-
-# min/max normalization from 0 to 1
-normalize <- function(x, na.rm = TRUE){
-  return((x-min(x)) / (max(x)-min(x)))}
-
 # min/max normalization from -1 to 1
-normalize2 <- function(x, na.rm = TRUE){
+normalize <- function(x, na.rm = TRUE){
   return(2* ((x - min(x)) / (max(x)-min(x)))-1)}
 
-# 
+# min/max normalization for afinn data 
 normalize_afinn <- function(x, na.rm = TRUE){
   return(2* ((x - (-5)) / (5-(-5)))-1)}
-
 ```
 
-### Calculate Sentiment Scores
+### Calculate Sentiment Scores: OLD!!!
 ```{r}
 # Calculate sentiment scores for different lexicons and input data frames
 # 
@@ -127,16 +130,177 @@ amazon_sentiment <- get_sentiment(amazon, c("afinn", "lsd", "vader"))
 
 reviews_sentiment
 ```
+Calculate Sentiment Scores: NEW!!!!
+```{r}
+# alternative sentiment function (can be used as final one), added get_token
+
+# Calculate sentiment scores for different lexicons and input data frames
+# 
+# Arg:
+#  data: input data frame
+#  lexicons: names of lexicons that should be used for sentiment scoring
+#  normalize: "relative" if normalization is handled relative to output, i.e. output column of afinn is being scaled via min/max normalization
+#  normalize: "afinn" if normalization is handled by taking -5 as new minimum and +5 as new maximum and everything else is scaled between
+#  get_tokens: if TRUE final data frame consists of single tokens with an associated sentiment score
+#              else final data frame consists of an associated sentiment score per input text instead
+#   
+# Returns: 
+#  Data frame with (normalized) sentiment sores for chosen lexicons
+
+get_sentiment <- function(df, lexicons, normalize, get_tokens){
+   
+   if(get_tokens==TRUE){
+     df <- df %>%
+       unnest_tokens(token,text)
+     
+     tok = df$token
+     
+   }else{
+     tok = tokens(df$text)
+   }
+   # for each lexicon, get sentiment scores and save scores in new column of data frame
+   for(lex in lexicons){
+     
+     if(lex == "afinn"){
+     df$afinn <- round(textstat_valence(tok, afinn, normalize="dictionary")$sentiment,3)}
+     
+     if(lex == "lsd"){
+     df$lsd<- round(textstat_polarity(tok, lsd, fun=sent_relpropdiff)$sentiment,3)}
+     #df$lsd<- round(textstat_polarity(tokens(df$text), lsd, fun=sent_relpropdiff)$sentiment,3)}
+     
+     if(lex == "vader"){
+     df$vader <- round(vader_df(df$text)$compound,3)}
+   }
+   
+   # normalize sentiment scores if TRUE, VADER and LSD scores are already normalized within functions above
+   if(normalize=="afinn"){
+      df$afinn <- round(normalize_afinn(df$afinn), 3)
+   }else{
+      df$afinn <- round(normalize(df$afinn), 3)}
+   
+   # set sentiment scores to 0 if NA
+   df[is.na(df)] <- 0
+   
+   return(df)
+}
+
+```
+
+```{r}
+### BASELINE  
+reviews_sentiment_norm <- get_sentiment(reviews, c("afinn","lsd", "vader"), normalize="relative", get_tokens=FALSE)
+twitter_sentiment_norm <- get_sentiment(twitter, c("afinn","lsd", "vader"), normalize="relative", get_tokens=FALSE)
+parlvote_sentiment_norm <- get_sentiment(parlvote, c("afinn","lsd", "vader"), normalize="relative", get_tokens=FALSE)
+amazon_sentiment_norm <- get_sentiment(amazon, c("afinn", "lsd", "vader"), normalize="relative", get_tokens=FALSE)
+finance_sentiment_norm <- get_sentiment(finance, c("afinn", "lsd", "vader"), normalize="relative", get_tokens=FALSE)
+
+reviews_sentiment_norm1 <- get_sentiment(reviews, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+twitter_sentiment_norm1 <- get_sentiment(twitter, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+parlvote_sentiment_norm1 <- get_sentiment(parlvote, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+amazon_sentiment_norm1 <- get_sentiment(amazon, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+finance_sentiment_norm1 <- get_sentiment(finance, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+
+### CONFIG1 
+reviews_config1_sentiment_norm <- get_sentiment(reviews_config1, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+twitter_config1_sentiment_norm <- get_sentiment(twitter_config1, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+parlvote_config1_sentiment_norm <- get_sentiment(parlvote_config1, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+amazon_config1_sentiment_norm <- get_sentiment(amazon_config1, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+finance_config1_sentiment_norm <- get_sentiment(finance_config1, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+
+reviews_config1_sentiment_norm1 <- get_sentiment(reviews_config1, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+twitter_config1_sentiment_norm1 <- get_sentiment(twitter_config1, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+parlvote_config1_sentiment_norm1 <- get_sentiment(parlvote_config1, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+amazon_config1_sentiment_norm1 <- get_sentiment(amazon_config1, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+finance_config1_sentiment_norm1 <- get_sentiment(finance_config1, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+
+### CONFIG2
+reviews_config2_sentiment_norm <- get_sentiment(reviews_config2, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+twitter_config2_sentiment_norm <- get_sentiment(twitter_config2, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+parlvote_config2_sentiment_norm <- get_sentiment(parlvote_config2, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+amazon_config2_sentiment_norm <- get_sentiment(amazon_config2, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+finance_config2_sentiment_norm <- get_sentiment(finance_config2, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+
+reviews_config2_sentiment_norm1 <- get_sentiment(reviews_config2, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+twitter_config2_sentiment_norm1 <- get_sentiment(twitter_config2, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+parlvote_config2_sentiment_norm1 <- get_sentiment(parlvote_config2, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+amazon_config2_sentiment_norm1 <- get_sentiment(amazon_config2, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+finance_config2_sentiment_norm1 <- get_sentiment(finance_config2, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+
+### CONFIG3 
+reviews_config3_sentiment_norm <- get_sentiment(reviews_config3, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+twitter_config3_sentiment_norm <- get_sentiment(twitter_config3, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+parlvote_config3_sentiment_norm <- get_sentiment(parlvote_config3, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+amazon_config3_sentiment_norm <- get_sentiment(amazon_config3, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+finance_config3_sentiment_norm <- get_sentiment(finance_config3, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+
+reviews_config3_sentiment_norm1 <- get_sentiment(reviews_config3, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+twitter_config3_sentiment_norm1 <- get_sentiment(twitter_config3, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+parlvote_config3_sentiment_norm1 <- get_sentiment(parlvote_config3, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+amazon_config3_sentiment_norm1 <- get_sentiment(amazon_config3, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+finance_config3_sentiment_norm1 <- get_sentiment(finance_config3, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+
+```
+
 ```{r}
 # write data to csv file 
-write.csv(parlvote_sentiment, "datasets/sentiment_data/parlvote_sentiment_norm1.csv", row.names = FALSE)
-write.csv(amazon_sentiment, "datasets/sentiment_data/amazon_sentiment_norm1.csv", row.names = FALSE)
-write.csv(twitter_sentiment, "datasets/sentiment_data/twitter_sentiment_norm1.csv", row.names = FALSE)
-write.csv(reviews_sentiment, "datasets/sentiment_data/reviews_sentiment_norm_norm1.csv", row.names = FALSE)
+
+### BASELINE
+write.csv(parlvote_sentiment_norm, "datasets/sentiment_scores/parlvote_sent_norm.csv", row.names = FALSE)
+write.csv(amazon_sentiment_norm, "datasets/sentiment_scores/amazon_sent_norm.csv", row.names = FALSE)
+write.csv(twitter_sentiment_norm, "datasets/sentiment_scores/twitter_sent_norm.csv", row.names = FALSE)
+write.csv(reviews_sentiment_norm, "datasets/sentiment_scores/reviews_sent_norm.csv", row.names = FALSE)
+write.csv(finance_sentiment_norm, "datasets/sentiment_scores/finance_sent_norm.csv", row.names = FALSE)
+
+write.csv(parlvote_sentiment_norm1, "datasets/sentiment_scores/parlvote_sent_norm1.csv", row.names = FALSE)
+write.csv(amazon_sentiment_norm1, "datasets/sentiment_scores/amazon_sent_norm1.csv", row.names = FALSE)
+write.csv(twitter_sentiment_norm1, "datasets/sentiment_scores/twitter_sent_norm1.csv", row.names = FALSE)
+write.csv(reviews_sentiment_norm1, "datasets/sentiment_scores/reviews_sent_norm1.csv", row.names = FALSE)
+write.csv(finance_sentiment_norm1, "datasets/sentiment_scores/finance_sent_norm1.csv", row.names = FALSE)
+
+### CONFIG1
+write.csv(parlvote_config1_sentiment_norm, "datasets/sentiment_scores/parlvote_config1_sent_norm.csv", row.names = FALSE)
+write.csv(amazon_config1_sentiment_norm, "datasets/sentiment_scores/amazon_config1_sent_norm.csv", row.names = FALSE)
+write.csv(twitter_config1_sentiment_norm, "datasets/sentiment_scores/twitter_config1_sent_norm.csv", row.names = FALSE)
+write.csv(reviews_config1_sentiment_norm, "datasets/sentiment_scores/reviews_config1_sent_norm.csv", row.names = FALSE)
+write.csv(finance_config1_sentiment_norm, "datasets/sentiment_scores/finance_config1_sent_norm.csv", row.names = FALSE)
+
+write.csv(parlvote_config1_sentiment_norm1, "datasets/sentiment_scores/parlvote_config1_sent_norm1.csv", row.names = FALSE)
+write.csv(amazon_config1_sentiment_norm1, "datasets/sentiment_scores/amazon_config1_sent_norm1.csv", row.names = FALSE)
+write.csv(twitter_config1_sentiment_norm1, "datasets/sentiment_scores/twitter_config1_sent_norm1.csv", row.names = FALSE)
+write.csv(reviews_config1_sentiment_norm1, "datasets/sentiment_scores/reviews_config1_sent_norm1.csv", row.names = FALSE)
+write.csv(finance_config1_sentiment_norm1, "datasets/sentiment_scores/finance_config1_sent_norm1.csv", row.names = FALSE)
+
+### CONFIG2
+write.csv(parlvote_config2_sentiment_norm, "datasets/sentiment_scores/parlvote_config2_sent_norm.csv", row.names = FALSE)
+write.csv(amazon_config2_sentiment_norm, "datasets/sentiment_scores/amazon_config2_sent_norm.csv", row.names = FALSE)
+write.csv(twitter_config2_sentiment_norm, "datasets/sentiment_scores/twitter_config2_sent_norm.csv", row.names = FALSE)
+write.csv(reviews_config2_sentiment_norm, "datasets/sentiment_scores/reviews_config2_sent_norm.csv", row.names = FALSE)
+write.csv(finance_config2_sentiment_norm, "datasets/sentiment_scores/finance_config2_sent_norm.csv", row.names = FALSE)
+
+write.csv(parlvote_config2_sentiment_norm1, "datasets/sentiment_scores/parlvote_config2_sent_norm1.csv", row.names = FALSE)
+write.csv(amazon_config2_sentiment_norm1, "datasets/sentiment_scores/amazon_config2_sent_norm1.csv", row.names = FALSE)
+write.csv(twitter_config2_sentiment_norm1, "datasets/sentiment_scores/twitter_config2_sent_norm1.csv", row.names = FALSE)
+write.csv(reviews_config2_sentiment_norm1, "datasets/sentiment_scores/reviews_config2_sent_norm1.csv", row.names = FALSE)
+write.csv(finance_config2_sentiment_norm1, "datasets/sentiment_scores/finance_config2_sent_norm1.csv", row.names = FALSE)
+
+### CONFIG3
+write.csv(parlvote_config3_sentiment_norm, "datasets/sentiment_scores/parlvote_config3_sent_norm.csv", row.names = FALSE)
+write.csv(amazon_config3_sentiment_norm, "datasets/sentiment_scores/amazon_config3_sent_norm.csv", row.names = FALSE)
+write.csv(twitter_config3_sentiment_norm, "datasets/sentiment_scores/twitter_config3_sent_norm.csv", row.names = FALSE)
+write.csv(reviews_config3_sentiment_norm, "datasets/sentiment_scores/reviews_config3_sent_norm.csv", row.names = FALSE)
+write.csv(finance_config3_sentiment_norm, "datasets/sentiment_scores/finance_config3_sent_norm.csv", row.names = FALSE)
+
+write.csv(parlvote_config3_sentiment_norm1, "datasets/sentiment_scores/parlvote_config3_sent_norm1.csv", row.names = FALSE)
+write.csv(amazon_config3_sentiment_norm1, "datasets/sentiment_scores/amazon_config3_sent_norm1.csv", row.names = FALSE)
+write.csv(twitter_config3_sentiment_norm1, "datasets/sentiment_scores/twitter_config3_sent_norm1.csv", row.names = FALSE)
+write.csv(reviews_config3_sentiment_norm1, "datasets/sentiment_scores/reviews_config3_sent_norm1.csv", row.names = FALSE)
+write.csv(finance_config3_sentiment_norm1, "datasets/sentiment_scores/finance_config3_sent_norm1.csv", row.names = FALSE)
+
+
 ```
 
 # 3. Step: Calculate Statistics
-### Convert data into ternary format
+### Convert data into discrete format
 ```{r}
 # Convert final values into ternary (1 = positive, 0 = neutral, -1 = negative) format for evaluation and comparison
 # 
