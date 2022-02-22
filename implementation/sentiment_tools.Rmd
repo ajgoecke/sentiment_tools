@@ -40,6 +40,7 @@ twitter <- readRDS(file="datasets/baseline/twitter_config_base.rds")
 parlvote <- readRDS(file="datasets/baseline/parl_config_base.rds")
 amazon <- readRDS(file="datasets/baseline/ama_config_base.rds")
 finance <- readRDS(file="datasets/baseline/fin_config_base.rds")
+parlvote_corr <- readRDS(file="datasets/corr_part.rds")
 
 # load preprocessed datasets
 ### CONFIG1
@@ -73,6 +74,7 @@ amazon
 twitter
 finance
 parlvote
+parlvote_corr
 ```
 
 # 2. Step: Perform Sentiment Analysis
@@ -222,12 +224,14 @@ twitter_sentiment_norm <- get_sentiment(twitter, c("afinn","lsd", "vader"), norm
 parlvote_sentiment_norm <- get_sentiment(parlvote, c("afinn","lsd", "vader"), normalize="relative", get_tokens=FALSE)
 amazon_sentiment_norm <- get_sentiment(amazon, c("afinn", "lsd", "vader"), normalize="relative", get_tokens=FALSE)
 finance_sentiment_norm <- get_sentiment(finance, c("afinn", "lsd", "vader"), normalize="relative", get_tokens=FALSE)
+parlvote_corr_norm <- get_sentiment(parlvote_corr, c("afinn", "lsd", "vader"), normalize="relative", get_tokens=FALSE)
 
 reviews_sentiment_norm1 <- get_sentiment(reviews, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
 twitter_sentiment_norm1 <- get_sentiment(twitter, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
 parlvote_sentiment_norm1 <- get_sentiment(parlvote, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
 amazon_sentiment_norm1 <- get_sentiment(amazon, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
 finance_sentiment_norm1 <- get_sentiment(finance, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+parlvote_corr_norm1 <- get_sentiment(parlvote_corr, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
 
 ### CONFIG1 
 reviews_config1_sentiment_norm <- get_sentiment(reviews_config1, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
@@ -284,12 +288,14 @@ write.csv(amazon_sentiment_norm, "datasets/sentiment_scores/amazon_sent_norm.csv
 write.csv(twitter_sentiment_norm, "datasets/sentiment_scores/twitter_sent_norm.csv", row.names = FALSE)
 write.csv(reviews_sentiment_norm, "datasets/sentiment_scores/reviews_sent_norm.csv", row.names = FALSE)
 write.csv(finance_sentiment_norm, "datasets/sentiment_scores/finance_sent_norm.csv", row.names = FALSE)
+write.csv(parlvote_corr_norm, "datasets/sentiment_scores/parlvote_corr_norm.csv", row.names = FALSE)
 
 write.csv(parlvote_sentiment_norm1, "datasets/sentiment_scores/parlvote_sent_norm1.csv", row.names = FALSE)
 write.csv(amazon_sentiment_norm1, "datasets/sentiment_scores/amazon_sent_norm1.csv", row.names = FALSE)
 write.csv(twitter_sentiment_norm1, "datasets/sentiment_scores/twitter_sent_norm1.csv", row.names = FALSE)
 write.csv(reviews_sentiment_norm1, "datasets/sentiment_scores/reviews_sent_norm1.csv", row.names = FALSE)
 write.csv(finance_sentiment_norm1, "datasets/sentiment_scores/finance_sent_norm1.csv", row.names = FALSE)
+write.csv(parlvote_corr_norm1, "datasets/sentiment_scores/parlvote_corr_norm1.csv", row.names = FALSE)
 
 ### CONFIG1
 write.csv(parlvote_config1_sentiment_norm, "datasets/sentiment_scores/parlvote_config1_sent_norm.csv", row.names = FALSE)
