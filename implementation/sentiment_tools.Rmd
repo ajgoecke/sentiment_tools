@@ -234,11 +234,11 @@ finance_sentiment_norm1 <- get_sentiment(finance, c("afinn", "lsd", "vader"), no
 parlvote_corr_norm1 <- get_sentiment(parlvote_corr, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
 
 ### CONFIG1 
-reviews_config1_sentiment_norm <- get_sentiment(reviews_config1, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
-twitter_config1_sentiment_norm <- get_sentiment(twitter_config1, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
-parlvote_config1_sentiment_norm <- get_sentiment(parlvote_config1, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
-amazon_config1_sentiment_norm <- get_sentiment(amazon_config1, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
-finance_config1_sentiment_norm <- get_sentiment(finance_config1, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+reviews_config1_sentiment_norm <- get_sentiment(reviews_config1, c("afinn","lsd", "vader"), normalize="relative", get_tokens=FALSE)
+twitter_config1_sentiment_norm <- get_sentiment(twitter_config1, c("afinn","lsd", "vader"), normalize="relative", get_tokens=FALSE)
+parlvote_config1_sentiment_norm <- get_sentiment(parlvote_config1, c("afinn","lsd", "vader"), normalize="relative", get_tokens=FALSE)
+amazon_config1_sentiment_norm <- get_sentiment(amazon_config1, c("afinn", "lsd", "vader"), normalize="relative", get_tokens=FALSE)
+finance_config1_sentiment_norm <- get_sentiment(finance_config1, c("afinn", "lsd", "vader"), normalize="relative", get_tokens=FALSE)
 
 reviews_config1_sentiment_norm1 <- get_sentiment(reviews_config1, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
 twitter_config1_sentiment_norm1 <- get_sentiment(twitter_config1, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
@@ -247,11 +247,11 @@ amazon_config1_sentiment_norm1 <- get_sentiment(amazon_config1, c("afinn", "lsd"
 finance_config1_sentiment_norm1 <- get_sentiment(finance_config1, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
 
 ### CONFIG2
-reviews_config2_sentiment_norm <- get_sentiment(reviews_config2, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
-twitter_config2_sentiment_norm <- get_sentiment(twitter_config2, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
-parlvote_config2_sentiment_norm <- get_sentiment(parlvote_config2, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
-amazon_config2_sentiment_norm <- get_sentiment(amazon_config2, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
-finance_config2_sentiment_norm <- get_sentiment(finance_config2, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+reviews_config2_sentiment_norm <- get_sentiment(reviews_config2, c("afinn","lsd", "vader"), normalize="relative", get_tokens=FALSE)
+twitter_config2_sentiment_norm <- get_sentiment(twitter_config2, c("afinn","lsd", "vader"), normalize="relative", get_tokens=FALSE)
+parlvote_config2_sentiment_norm <- get_sentiment(parlvote_config2, c("afinn","lsd", "vader"), normalize="relative", get_tokens=FALSE)
+amazon_config2_sentiment_norm <- get_sentiment(amazon_config2, c("afinn", "lsd", "vader"), normalize="relative", get_tokens=FALSE)
+finance_config2_sentiment_norm <- get_sentiment(finance_config2, c("afinn", "lsd", "vader"), normalize="relative", get_tokens=FALSE)
 
 reviews_config2_sentiment_norm1 <- get_sentiment(reviews_config2, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
 twitter_config2_sentiment_norm1 <- get_sentiment(twitter_config2, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
@@ -260,11 +260,11 @@ amazon_config2_sentiment_norm1 <- get_sentiment(amazon_config2, c("afinn", "lsd"
 finance_config2_sentiment_norm1 <- get_sentiment(finance_config2, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
 
 ### CONFIG3 
-reviews_config3_sentiment_norm <- get_sentiment(reviews_config3, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
-twitter_config3_sentiment_norm <- get_sentiment(twitter_config3, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
-parlvote_config3_sentiment_norm <- get_sentiment(parlvote_config3, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
-amazon_config3_sentiment_norm <- get_sentiment(amazon_config3, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
-finance_config3_sentiment_norm <- get_sentiment(finance_config3, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+reviews_config3_sentiment_norm <- get_sentiment(reviews_config3, c("afinn","lsd", "vader"), normalize="relative", get_tokens=FALSE)
+twitter_config3_sentiment_norm <- get_sentiment(twitter_config3, c("afinn","lsd", "vader"), normalize="relative", get_tokens=FALSE)
+parlvote_config3_sentiment_norm <- get_sentiment(parlvote_config3, c("afinn","lsd", "vader"), normalize="relative", get_tokens=FALSE)
+amazon_config3_sentiment_norm <- get_sentiment(amazon_config3, c("afinn", "lsd", "vader"), normalize="relative", get_tokens=FALSE)
+finance_config3_sentiment_norm <- get_sentiment(finance_config3, c("afinn", "lsd", "vader"), normalize="relative", get_tokens=FALSE)
 
 reviews_config3_sentiment_norm1 <- get_sentiment(reviews_config3, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
 twitter_config3_sentiment_norm1 <- get_sentiment(twitter_config3, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
@@ -275,8 +275,8 @@ finance_config3_sentiment_norm1 <- get_sentiment(finance_config3, c("afinn", "ls
 ```
 
 ```{r}
-twitter_config3_sentiment_norm
-twitter_config3_sentiment_norm1
+finance_config2_sentiment_norm
+finance_config2_sentiment_norm1
 ```
 
 ```{r}
@@ -362,13 +362,11 @@ get_discrete <- function(df, to_change, gold){
         x == "Positive" | x=="positive" ~ 1, x == "Negative" | x=="negative" ~ -1, x == "Neutral" | x=="neutral" ~ 0)})
 }
 
-reviews_discrete <- get_discrete(reviews_sentiment, c("afinn","vader","lsd"), "rating")
-twitter_discrete <- get_discrete(twitter_sentiment, c("afinn","vader","lsd"), "rating")
-parlvote_discrete <- get_discrete(parlvote_sentiment, c("afinn","vader","lsd"), "rating")
-amazon_discrete <- get_discrete(amazon_sentiment, c("afinn","vader","lsd"), "rating")
+reviews_discrete <- get_discrete(reviews_sentiment_norm, c("afinn","vader","lsd"), "rating")
+twitter_discrete <- get_discrete(twitter_sentiment_norm, c("afinn","vader","lsd"), "rating")
+parlvote_discrete <- get_discrete(parlvote_sentiment_norm, c("afinn","vader","lsd"), "rating")
+amazon_discrete <- get_discrete(amazon_sentiment_norm, c("afinn","vader","lsd"), "rating")
 finance_discrete <- get_discrete(finance_sentiment_norm, c("afinn","vader","lsd"), "rating")
-  
-parlvote_binary
 
 ```
 ### Calculate Accuracy, Precision, Recall
@@ -397,17 +395,31 @@ get_statistics <- function(df, lexicon){
   return(results)
 }
 
-reviews_afinn.acc <- get_statistics(reviews_binary, "afinn")[[1]][1]
-reviews_afinn.stats <- get_statistics(reviews_binary, "afinn")[2]
+reviews_afinn.acc <- get_statistics(reviews_discrete, "afinn")[[1]][1]
+reviews_afinn.stats <- get_statistics(reviews_discrete, "afinn")[2]
 
-reviews_lsd.acc <- get_statistics(reviews_binary, "lsd")[[1]][1]
-reviews_lsd.stats <- get_statistics(reviews_binary, "lsd")[2]
+reviews_lsd.acc <- get_statistics(reviews_discrete, "lsd")[[1]][1]
+reviews_lsd.stats <- get_statistics(reviews_discrete, "lsd")[2]
 
-reviews_vader.acc <- get_statistics(reviews_binary, "vader")[[1]][1]
-reviews_vader.stats <- get_statistics(reviews_binary, "vader")[2]
+reviews_vader.acc <- get_statistics(reviews_discrete, "vader")[[1]][1]
+reviews_vader.stats <- get_statistics(reviews_discrete, "vader")[2]
 
 reviews_afinn.stats
-reviews_afinn.acc
+reviews_vader.acc
+
+finance_afinn.acc <- get_statistics(finance_discrete, "afinn")[[1]][1]
+finance_afinn.stats <- get_statistics(finance_discrete, "afinn")[2]
+
+finance_lsd.acc <- get_statistics(finance_discrete, "lsd")[[1]][1]
+finance_lsd.stats <- get_statistics(finance_discrete, "lsd")[2]
+
+finance_vader.acc <- get_statistics(finance_discrete, "vader")[[1]][1]
+finance_vader.stats <- get_statistics(finance_discrete, "vader")[2]
+
+finance_afinn.stats
+finance_vader.acc
+
+finance
 ```
 # 4. Step: Plot Data 
 ```{r}
