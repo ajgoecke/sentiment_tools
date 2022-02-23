@@ -42,6 +42,9 @@ amazon <- readRDS(file="datasets/baseline/ama_config_base.rds")
 finance <- readRDS(file="datasets/baseline/fin_config_base.rds")
 parlvote_corr <- readRDS(file="datasets/corr_part.rds")
 
+twitter_bin <- readRDS(file="datasets/baseline/twitterbin_config_base.rds")
+finance_bin <- readRDS(file="datasets/baseline/finbin_config_base.rds")
+
 # load preprocessed datasets
 ### CONFIG1
 reviews_config1 <- readRDS(file="datasets/config_1/book_config_1.rds")
@@ -50,6 +53,9 @@ parlvote_config1 <- readRDS(file="datasets/config_1/parl_config_1.rds")
 amazon_config1 <- readRDS(file="datasets/config_1/ama_config_1.rds")
 finance_config1 <- readRDS(file="datasets/config_1/fin_config_1.rds")
 
+twitter_bin <- readRDS(file="datasets/config_1/twitterbin_config_base.rds")
+finance_bin <- readRDS(file="datasets/config_1/finbin_config_base.rds")
+
 ### CONFIG2
 reviews_config2 <- readRDS(file="datasets/config_2/book_config_2.rds")
 twitter_config2 <- readRDS(file="datasets/config_2/twitter_config_2.rds")
@@ -57,12 +63,18 @@ parlvote_config2 <- readRDS(file="datasets/config_2/parl_config_2.rds")
 amazon_config2 <- readRDS(file="datasets/config_2/ama_config_2.rds")
 finance_config2 <- readRDS(file="datasets/config_2/fin_config_2.rds")
 
+twitter_bin2 <- readRDS(file="datasets/config_2/twitterbin_config_base.rds")
+finance_bin2 <- readRDS(file="datasets/config_2/finbin_config_base.rds")
+
 ### CONFIG3
 reviews_config3 <- readRDS(file="datasets/config_3/book_config_3.rds")
 twitter_config3 <- readRDS(file="datasets/config_3/twitter_config_3.rds")
 parlvote_config3 <- readRDS(file="datasets/config_3/parl_config_3.rds")
 amazon_config3 <- readRDS(file="datasets/config_3/ama_config_3.rds")
 finance_config3 <- readRDS(file="datasets/config_3/fin_config_3.rds")
+
+twitter_bin3 <- readRDS(file="datasets/config_3/twitterbin_config_base.rds")
+finance_bin3 <- readRDS(file="datasets/config_3/finbin_config_base.rds")
 
 # load lexicons
 afinn <- data_dictionary_AFINN
@@ -272,6 +284,17 @@ parlvote_config3_sentiment_norm1 <- get_sentiment(parlvote_config3, c("afinn","l
 amazon_config3_sentiment_norm1 <- get_sentiment(amazon_config3, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
 finance_config3_sentiment_norm1 <- get_sentiment(finance_config3, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
 
+# BASELINE BINARY VERSIONS
+finance_bin_norm <- get_sentiment(finance_bin, c("afinn", "lsd", "vader"), normalize="relative", get_tokens=FALSE)
+finance_bin_norm1 <- get_sentiment(finance_bin, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+write.csv(finance_bin_norm, "datasets/sentiment_scores/finance_bin_norm.csv", row.names = FALSE)
+write.csv(finance_bin_norm1, "datasets/sentiment_scores/finance_bin_norm1.csv", row.names = FALSE)
+
+
+twitter_bin_norm <- get_sentiment(twitter_bin, c("afinn", "lsd", "vader"), normalize="relative", get_tokens=FALSE)
+twitter_bin_norm1 <- get_sentiment(twitter_bin, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+write.csv(twitter_bin_norm, "datasets/sentiment_scores/twitter_bin_norm.csv", row.names = FALSE)
+write.csv(twitter_bin_norm1, "datasets/sentiment_scores/twitter_bin_norm1.csv", row.names = FALSE)
 ```
 
 ```{r}
