@@ -1,0 +1,11 @@
+"","afinn","lsd","vader"
+"reviews tokens coverage (%)",6.99,9.14,8.84
+"reviews tokens coverage (%) - stopwords",14.15,20.26,18.14
+"twitter tokens coverage (%)",6.68,8.15,7.99
+"twitter tokens coverage (%) - stopwords",9.06,12.65,11.34
+"parlvote tokens coverage (%)",5.11,7.41,7.02
+"parlvote tokens coverage (%) - stopwords",11.09,18.28,15.82
+"amazon tokens coverage (%)",6.27,8.44,7.9
+"amazon tokens coverage (%) - stopwords",11.62,17.06,14.59
+"finance tokens coverage (%)",3.28,3.39,4.83
+"finance tokens coverage (%) - stopwords",5.35,5.44,7.48

@@ -358,46 +358,61 @@ twitter_discrete
 ```
 # 4. Step: Plot Data 
 ```{r}
-# plot columns
-reviews_dfm <- melt(head(reviews_sentiment,50)[,c('id','afinn','lsd','vader')],id.vars = 1)
+# ===== PLOT SENTIMENT SCORES =====
 
-reviews_plot <- ggplot(reviews_dfm,aes(x = id,y = value)) + 
+# create data frame with sentiment scores as variable of first 100 instances of corpus
+reviews_df <- melt(head(reviews_sentiment_norm1,100)[,c('id','afinn','lsd','vader')],id.vars = 1)
+twitter_df <- melt(head(twitter_sentiment_norm1,100)[,c('id','afinn','lsd','vader')],id.vars = 1)
+parlvote_df <- melt(head(parlvote_sentiment_norm1,100)[,c('id','afinn','lsd','vader')],id.vars = 1)
+amazon_df <- melt(head(amazon_sentiment_norm1,100)[,c('id','afinn','lsd','vader')],id.vars = 1)
+finance_df <- melt(head(finance_sentiment_norm1,100)[,c('id','afinn','lsd','vader')],id.vars = 1)
+
+# create plots for each corpus
+reviews_plot <- ggplot(reviews_df,aes(x = id,y = value)) + 
                 geom_bar(aes(fill = variable),stat = "identity",position = "dodge") +
-                ggtitle("Reviews Sentiments")
+                facet_wrap(~ variable, ncol = 1, scales="free_y")+
+                xlab("text id")+ ylab("sentiment score")+
+                ggtitle("Reviews Sentiment")
 
-
-twitter_dfm <- melt(head(twitter_sentiment,50)[,c('id','afinn','lsd','vader')],id.vars = 1)
-
-twitter_plot <- ggplot(twitter_dfm,aes(x = id,y = value)) + 
+twitter_plot <- ggplot(twitter_df,aes(x = id,y = value)) + 
                 geom_bar(aes(fill = variable),stat = "identity",position = "dodge") +
-                ggtitle("Twitter Sentiments")
+                xlab("text id")+ ylab("sentiment score")+
+                ggtitle("Twitter Sentiment")
 
-parlvote_dfm <- melt(head(parlvote_sentiment,50)[,c('id','afinn','lsd','vader')],id.vars = 1)
 
-parlvote_plot <- ggplot(parlvote_dfm,aes(x = id,y = value)) + 
+parlvote_plot <- ggplot(parlvote_df,aes(x = id,y = value)) + 
+                 geom_bar(aes(fill = variable),stat = "identity",position = "dodge")+
+                 #facet_wrap(~ variable, ncol = 1, scales="free_y")+
+                 xlab("text id")+ ylab("sentiment score")+
+                 ggtitle("ParlVote Sentiment")
+
+amazon_plot <- ggplot(amazon_df,aes(x = id,y = value)) + 
+               geom_bar(aes(fill = variable),stat = "identity",position = "dodge")+
+               #facet_wrap(~ variable, ncol = 1, scales="free_y")+
+               xlab("text id")+ ylab("sentiment score")+
+               ggtitle("Amazon Sentiment")
+
+
+finance_plot <- ggplot(finance_df,aes(x = id,y = value)) + 
                 geom_bar(aes(fill = variable),stat = "identity",position = "dodge")+
                 #facet_wrap(~ variable, ncol = 1, scales="free_y")+
-                ggtitle("ParlVote Sentiments")
+                xlab("text id")+ ylab("sentiment score")+
+                ggtitle("Finance Sentiment")
 
-#parlvote_norm_dfm <- melt(head(parlvote_sentiment,50)[,c('id','afinn_norm','lsd_norm','vader_norm')],id.vars = 1)
+reviews_plot.line <- ggplot(reviews_df,aes(x = id, y = value, group=variable)) +
+                     geom_line(aes(colour=variable), size=0.4)+ 
+                     ylim(-1,1) +
+                     ggtitle("Reviews Sentiment Scores")
 
-#parlvote_norm_plot <- ggplot(parlvote_norm_dfm,aes(x = id,y = value)) + 
-              #  geom_bar(aes(fill = variable),stat = "identity",position = "dodge")+
-               # facet_wrap(~ variable, ncol = 1, scales="free_y")+
-                #ggtitle("ParlVote Sentiments")
-
-
-amazon_dfm <- melt(head(amazon_sentiment,50)[,c('id','afinn','lsd','vader')],id.vars = 1)
-
-amazon_plot <- ggplot(amazon_dfm,aes(x = id,y = value)) + 
-                geom_bar(aes(fill = variable),stat = "identity",position = "dodge")+
-                #facet_wrap(~ variable, ncol = 1, scales="free_y")+
-                ggtitle("Amazon Sentiments")
+# show plots
 reviews_plot
+reviews_plot.line
 twitter_plot
 parlvote_plot
 amazon_plot
-#parlvote_norm_plot
+finance_plot 
+
+#ggsave("plot_ex.png", plot=plot, width = 50, height = 20, units = "cm")
 ```
 
 ### Plot important words
@@ -415,11 +430,34 @@ twitter_tok_discrete <- get_discrete(twitter_tok_sent, c("afinn","vader","lsd"),
 parlvote_tok_discrete <- get_discrete(parlvote_tok_sent, c("afinn","vader","lsd"), "rating")
 amazon_tok_discrete <- get_discrete(amazon_tok_sent, c("afinn","vader","lsd"), "rating")
 finance_tok_discrete <- get_discrete(finance_tok_sent, c("afinn","vader","lsd"), "rating")
+
+# load stopwords 
+data(stop_words)
+```
+
+```{r}
+reviews_tok_sent
+
+clean_reviews <- reviews_tok_sent %>%
+  anti_join(stop_words, by=reviews_tok_sent$token)
+
+
+reviews.word_counts <- reviews_tok_sent %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+nrow(reviews.word_counts)
+reviews.word_counts
+colSums(reviews.word_counts != 0)
+colSums(reviews_tok_sent != 0)
+reviews_tok_sent
 ```
 
 
 ### Compute Coverage of Sentiment Lexicons
 ```{r}
+# ===== COVERAGE PER TOKEN =====
+
 # Coverage per token: if sentiment score is not zero, count as "covered", get percentage of covered tokens
 reviews_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(reviews_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(reviews_tok_sent != 0)[[1]]*100,2))), "reviews tokens coverage (%)")
 twitter_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(twitter_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(twitter_tok_sent != 0)[[1]]*100,2))), "twitter tokens coverage (%)")
@@ -427,10 +465,41 @@ parlvote_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(parlvote_tok_se
 amazon_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(amazon_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(amazon_tok_sent != 0)[[1]]*100,2))), "amazon tokens coverage (%)")
 finance_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(finance_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(finance_tok_sent != 0)[[1]]*100,2))), "finance tokens coverage (%)")
 
-coverage_per_tok <- rbind(reviews_tok_coverage,twitter_tok_coverage,parlvote_tok_coverage,amazon_tok_coverage,finance_tok_coverage)
-coverage_per_tok
-write.csv(coverage_per_tok, "datasets/coverage/coverage_per_tok.csv", row.names = TRUE)
+# Coverage per token: with stopword removal 
 
+# remove stopwords from each data frame 
+reviews_tok.stopwords <- reviews_tok_sent %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+twitter_tok.stopwords <- twitter_tok_sent %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+parlvote_tok.stopwords <- parlvote_tok_sent %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+amazon_tok.stopwords <- amazon_tok_sent %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+finance_tok.stopwords <- finance_tok_sent %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+# same as above: if sentiment score is not zero, count as "covered", get percentage of covered tokens
+reviews_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(reviews_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(reviews_tok.stopwords != 0)[[1]]*100,2))), "reviews tokens coverage (%) - stopwords")
+twitter_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(twitter_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(twitter_tok.stopwords != 0)[[1]]*100,2))), "twitter tokens coverage (%) - stopwords")
+parlvote_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(parlvote_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(parlvote_tok.stopwords != 0)[[1]]*100,2))), "parlvote tokens coverage (%) - stopwords")
+amazon_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(amazon_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(amazon_tok.stopwords != 0)[[1]]*100,2))), "amazon tokens coverage (%) - stopwords")
+finance_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(finance_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(finance_tok.stopwords != 0)[[1]]*100,2))), "finance tokens coverage (%) - stopwords")
+
+# save data to data frame
+coverage_per_tok.stopwords <- rbind(reviews_tok_coverage,reviews_tok_coverage.stopwords, twitter_tok_coverage,twitter_tok_coverage.stopwords,parlvote_tok_coverage,parlvote_tok_coverage.stopwords, amazon_tok_coverage,amazon_tok_coverage.stopwords, finance_tok_coverage,finance_tok_coverage.stopwords)
+#write.csv(coverage_per_tok.stopwords, "datasets/coverage/coverage_per_tok_stopwords.csv", row.names = TRUE)
+
+# ===== COVERAGE PER TEXT =====
 
 # Coverage per text: if sentiment score is not zero, count as "covered", get percentage of covered text instances
 reviews_coverage <- `rownames<-`(data.frame(t(colSums(reviews_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "reviews coverage (%)")
@@ -439,15 +508,29 @@ parlvote_coverage <- `rownames<-`(data.frame(t(colSums(parlvote_sentiment_norm1[
 amazon_coverage <- `rownames<-`(data.frame(t(colSums(amazon_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "amazon coverage (%)")
 finance_coverage <- `rownames<-`(data.frame(t(colSums(finance_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "finance coverage (%)")
 
+# save data to data frame 
 coverage_per_text <- rbind(reviews_coverage,twitter_coverage,parlvote_coverage,amazon_coverage,finance_coverage)
-coverage_per_text
-write.csv(coverage_per_text, "datasets/coverage/coverage_per_text.csv", row.names = TRUE)
+#write.csv(coverage_per_text, "datasets/coverage/coverage_per_text.csv", row.names = TRUE)
+```
 
+
+```{r}
+coverage_per_tok.stopwords
+coverage_per_tok
+```
+
+
+```{r}
+colSums(reviews_tok_sent != 0)[[1]]*100
+
+reviews_tok_coverage1 <- `rownames<-`(data.frame(t(round((colSums(reviews_tok_sent[c("afinn","lsd","vader")] != 0)/32075)*100,2))), "reviews tokens coverage (%)")
+
+reviews_tok_coverage1
+reviews_tok_coverage
 ```
 
 ```{r}
-# load stopwords 
-data(stop_words)
+
 
 # get word counts per discrete score ("positive", "negative", "neutral", i.e. 1,-1,0)
 reviews_afinn.word_counts <- reviews_tok_discrete %>%
