@@ -218,11 +218,11 @@ finance_tok_discrete <- get_discrete(finance_tok_sent, c("afinn","vader","lsd"))
 # ===== COVERAGE PER TOKEN =====
 
 # Coverage per token: if sentiment score is not zero, count as "covered", get percentage of covered tokens
-reviews_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(reviews_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(reviews_tok_sent != 0)[[1]]*100,2))), "reviews tokens coverage (%)")
-twitter_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(twitter_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(twitter_tok_sent != 0)[[1]]*100,2))), "twitter tokens coverage (%)")
-parlvote_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(parlvote_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(parlvote_tok_sent != 0)[[1]]*100,2))), "parlvote tokens coverage (%)")
-amazon_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(amazon_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(amazon_tok_sent != 0)[[1]]*100,2))), "amazon tokens coverage (%)")
-finance_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(finance_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(finance_tok_sent != 0)[[1]]*100,2))), "finance tokens coverage (%)")
+reviews_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(reviews_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(reviews_tok_sent != 0)[[1]]*100,2))), "reviews tokens")
+twitter_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(twitter_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(twitter_tok_sent != 0)[[1]]*100,2))), "twitter tokens")
+parlvote_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(parlvote_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(parlvote_tok_sent != 0)[[1]]*100,2))), "parlvote tokens")
+amazon_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(amazon_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(amazon_tok_sent != 0)[[1]]*100,2))), "amazon tokens")
+finance_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(finance_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(finance_tok_sent != 0)[[1]]*100,2))), "finance tokens")
 
 # Coverage per token: with stopword removal 
 
@@ -248,20 +248,20 @@ finance_tok.stopwords <- finance_tok_sent %>%
    ungroup()
 
 # same as above: if sentiment score is not zero, count as "covered", get percentage of covered tokens
-reviews_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(reviews_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(reviews_tok.stopwords != 0)[[1]]*100,2))), "reviews tokens coverage (%) - stopwords")
-twitter_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(twitter_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(twitter_tok.stopwords != 0)[[1]]*100,2))), "twitter tokens coverage (%) - stopwords")
-parlvote_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(parlvote_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(parlvote_tok.stopwords != 0)[[1]]*100,2))), "parlvote tokens coverage (%) - stopwords")
-amazon_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(amazon_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(amazon_tok.stopwords != 0)[[1]]*100,2))), "amazon tokens coverage (%) - stopwords")
-finance_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(finance_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(finance_tok.stopwords != 0)[[1]]*100,2))), "finance tokens coverage (%) - stopwords")
+reviews_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(reviews_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(reviews_tok.stopwords != 0)[[1]]*100,2))), "reviews tokens - stopwords")
+twitter_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(twitter_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(twitter_tok.stopwords != 0)[[1]]*100,2))), "twitter tokens - stopwords")
+parlvote_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(parlvote_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(parlvote_tok.stopwords != 0)[[1]]*100,2))), "parlvote tokens - stopwords")
+amazon_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(amazon_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(amazon_tok.stopwords != 0)[[1]]*100,2))), "amazon tokens - stopwords")
+finance_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(finance_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(finance_tok.stopwords != 0)[[1]]*100,2))), "finance tokens - stopwords")
 
 # ===== COVERAGE PER TEXT =====
 
 # Coverage per text: if sentiment score is not zero, count as "covered", get percentage of covered text instances
-reviews_coverage <- `rownames<-`(data.frame(t(colSums(reviews_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "reviews text coverage (%)")
-twitter_coverage <- `rownames<-`(data.frame(t(colSums(twitter_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "twitter text coverage (%)")
-parlvote_coverage <- `rownames<-`(data.frame(t(colSums(parlvote_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "parlvote text coverage (%)")
-amazon_coverage <- `rownames<-`(data.frame(t(colSums(amazon_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "amazon text coverage (%)")
-finance_coverage <- `rownames<-`(data.frame(t(colSums(finance_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "finance text coverage (%)")
+reviews_coverage <- `rownames<-`(data.frame(t(colSums(reviews_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "reviews text")
+twitter_coverage <- `rownames<-`(data.frame(t(colSums(twitter_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "twitter text")
+parlvote_coverage <- `rownames<-`(data.frame(t(colSums(parlvote_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "parlvote text")
+amazon_coverage <- `rownames<-`(data.frame(t(colSums(amazon_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "amazon text")
+finance_coverage <- `rownames<-`(data.frame(t(colSums(finance_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "finance text")
 
 # save data to data frame 
 coverage <- rbind(reviews_tok_coverage,reviews_tok_coverage.stopwords,reviews_coverage, twitter_tok_coverage,twitter_tok_coverage.stopwords,parlvote_tok_coverage,twitter_coverage,parlvote_tok_coverage.stopwords, parlvote_coverage, amazon_tok_coverage,amazon_tok_coverage.stopwords, amazon_coverage, finance_tok_coverage,finance_tok_coverage.stopwords, finance_coverage)
