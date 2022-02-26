@@ -27,7 +27,7 @@ library(reshape2)
 
 
 require(quanteda)
-require(quanteda.corpora)
+#require(quanteda.corpora)
 require(quanteda.sentiment)
 #library("quanteda", warn.conflicts = FALSE, quietly = TRUE)
 ```
