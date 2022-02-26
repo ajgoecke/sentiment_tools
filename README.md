@@ -1,18 +1,25 @@
 
 # Comparison of Sentiment Tools across Domains
+Term project for the course "Opinion and Argument Mining" at the Universität Potsdam, winter semester 2021/2022, taught by Prof. Dr. Manfred Stede.  
+
+Developed by Friederike Schreiber (friederike.schreiber@uni-potsdam.de) and Anna-Janina Goecke (goecke@uni-potsdam.de).
+
+**Project Description**: This project aims to compare and evaluate different sentiment tools (Afinn, VADER, Lexicoder Sentiment Dictionary) to data sets from various domains (political speeches, twitter, amazon product reviews, book reviews, finance tweets).
 
 This repository contains R notebook files for:
 - preprocessing of corpus data
 - performing sentiment analysis 
 - evaluation of lexicon performance
 
-Term project for the course "Opinion and Argument Mining" at the Universität Potsdam, winter semester 2021/2022, taught by Prof. Dr. Manfred Stede.
-
-Developed by Friederike Schreiber and Anna-Janina Goecke.
+Furthermore, you can find the final paper, plots and result tables within this repository.  
 
 ### Data
-The data used for this project can be found within the `implementation/datasets` directory.  
-
+The data used for this project can be found within the `implementation/datasets` directory. To compare the performance of the sentiment tools, we used the following datasets:
+- ParlVote: 
+- Twitter:
+- Amazon Product Reviews:
+- Children's Book Reviews:
+- Finance Tweets: 
 
 ### How to run:
 We recommend to run the notebooks using RStudio. The following libraries are required: 
@@ -29,5 +36,5 @@ The code is well documented and explanations of the specific code cells can be f
 
 #### 3. Evaluation
 
-
+### References
 
