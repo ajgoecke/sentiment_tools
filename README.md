@@ -1,6 +1,6 @@
 
 # Comparison of Sentiment Tools across Domains
-Term project for the course "Opinion and Argument Mining" at the Universität Potsdam, winter semester 2021/2022, taught by Prof. Dr. Manfred Stede.  
+Term project for the course "Mining Opinions and Arguments" at the Universität Potsdam, winter semester 2021/2022, taught by Prof. Dr. Manfred Stede.  
 
 Developed by Friederike Schreiber (friederike.schreiber@uni-potsdam.de) and Anna-Janina Goecke (goecke@uni-potsdam.de).
 
