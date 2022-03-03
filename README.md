@@ -2,7 +2,7 @@
 # Comparison of Sentiment Tools across Domains
 Term project for the course "Mining Opinions and Arguments" at the Universität Potsdam, winter semester 2021/2022, taught by Prof. Dr. Manfred Stede.  
 
-Developed by Friederike Schreiber (friederike.schreiber@uni-potsdam.de) and Anna-Janina Goecke (goecke@uni-potsdam.de).
+Developed by Friederike Schreiber (schreiber6@uni-potsdam.de) and Anna-Janina Goecke (goecke@uni-potsdam.de).
 
 **Project Description**: This project aims to compare and evaluate different sentiment tools (Afinn, VADER, Lexicoder Sentiment Dictionary) to data sets from various domains (political speeches, twitter, amazon product reviews, book reviews, finance tweets).
 
@@ -23,8 +23,8 @@ The data used for this project can be found within the `implementation/datasets`
 
 ### How to run:
 We recommend to run the notebooks using RStudio. The following libraries are required: 
-*add libraries* `quanteda`,`quanteda.sentiment`,`vader`,`readtext`,`tidyverse`,`tidytext`,
-`reshape2`, ...  
+`quanteda`,`quanteda.sentiment`,`vader`,`readtext`,`tidyverse`,`tidytext`,`caret`,`plyr`,`dplyr`,`janitor`,`tm`,`textstem`,`textcat`,`lsa`
+`reshape2`
 
 To reproduce the project, execute the notebooks in the following order:
 #### 1. Corpus Preprocessing
