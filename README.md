@@ -41,7 +41,7 @@ This notebook contains the code to load the preprocessed data sets, run lexicon-
 The code is well documented, and explanations of the specific code cells can be found within the notebook itself. Within the notebook example data frames and example plots are created. To see all results and plots, please check the `implementation/sentiment_data` and `implementation/plots` directory.
 
 #### 3. Folder Evaluation:
-this folder contains notebooks used for various evaluation tasks. All results can also be found in the XXX folder.
+This folder contains notebooks used for various evaluation tasks. All results can also be found in the XXX folder.
 
 ###### Binary Evaluation & Neutral Evaluation:
 These notebooks contain code to calculate the accuracy, F1 score and confusion matrix of the performance of the lexica on the corpora. Also, code to perform ANOVA and Tukey Tests is included. The Neutral Evaluation notebook features code to determine a threshold to set neutral labels. 
