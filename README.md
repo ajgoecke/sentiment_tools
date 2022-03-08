@@ -4,7 +4,7 @@ Term project for the course "Mining Opinions and Arguments" at the Universität 
 
 Developed by Friederike Schreiber (schreiber6@uni-potsdam.de) and Anna-Janina Goecke (goecke@uni-potsdam.de).
 
-**Project Description**: This project aims to compare and evaluate different sentiment tools (Afinn, VADER, Lexicoder Sentiment Dictionary) to data sets from various domains (political speeches, twitter, amazon product reviews, book reviews, finance tweets).
+**Project Description**: This project aims to compare and evaluate different sentiment tools (Afinn, VADER, Lexicoder Sentiment Dictionary) to data sets from various domains (political speeches, twitter, amazon product reviews, book reviews, finance headlines).
 
 This repository contains R notebook files for:
 - preprocessing of corpus data
@@ -19,7 +19,7 @@ The data used for this project can be found within the `implementation/datasets`
 - Twitter:
 - Amazon Product Reviews:
 - Children's Book Reviews:
-- Finance Tweets: 
+- Finance News: 
 
 ### How to run:
 We recommend to run the notebooks using RStudio. The following libraries are required: 
@@ -27,14 +27,19 @@ We recommend to run the notebooks using RStudio. The following libraries are req
 `reshape2`
 
 To reproduce the project, execute the notebooks in the following order:
-#### 1. Corpus Preprocessing
+#### 1. Folder Preprocessing
+## Loading Datasets: 
+This notebook is used to load the corpus data, apply some light preprocessing and create subsets of 1000 examples with an equal rating distribution for each corpus. Links to download the corpora can be found in the notebook.
 
+## Further Preprocessing:
+This notebook contains code to make the datasets corresponding to three additional test conditions with including lemmatization and stopwords or one of them. The stopword list we used features also the most frequent neutral words as recognied by the lexica. Therefore the sentiment results of the base configuration are needed before the additional conditions can be used.
 
 #### 2. Sentiment analysis
 This notebook contains the code to load the preprocessed data sets, run lexicon-based sentiment analysis with Afinn, Lexicoder Sentiment Dictionary and VADER on the input data sets and to calculate the coverage of the sentiment lexicons on the corpus data. The idea was to implement the sentiment tools as a blackbox, therefore no changes were made for the lexicon and no additional rules or scores were implemented. 
 The code is well documented and explanations of the specific code cells can be found within the notebook itself. Within the notebook example data frames and example plots are created. To see all results and plots, please check the `implementation/sentiment_data` and `implementation/plots` directory.
 
-#### 3. Evaluation
+#### 3. Folder Evaluation:
+
 
 ### References
 
