@@ -23,8 +23,7 @@ The data used for this project can be found within the `implementation/datasets`
 
 ### How to run:
 We recommend running the notebooks using RStudio. The following libraries are required: 
-`quanteda`,`quanteda.sentiment`,`vader`,`readtext`,`tidyverse`,`tidytext`,`caret`,`plyr`,`dplyr`,`janitor`,`tm`,`textstem`,`textcat`,`lsa`
-`reshape2`
+`quanteda`,`quanteda.sentiment`,`vader`,`readtext`,`tidyverse`,`tidytext`,`caret`,`plyr`,`dplyr`,`janitor`,`tm`,`textstem`,`textcat`,`lsa`,`reshape2`
 
 To reproduce the project, execute the notebooks in the following order:
 #### 1. Folder Preprocessing
