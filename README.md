@@ -15,11 +15,11 @@ Furthermore, you can find the final paper, plots, and result tables within this 
 
 ### Data
 The data used for this project can be found within the `implementation/datasets` directory. To compare the performance of the sentiment tools, we used the following datasets:
-- ParlVote: 
-- Twitter:
-- Amazon Product Reviews:
-- Children's Book Reviews:
-- Finance News: 
+- ParlVote: https://data.mendeley.com/datasets/czjfwgs9tm/1
+- Twitter: https://www.kaggle.com/crowdflower/first-gop-debate-twitter-sentiment
+- Amazon Product Reviews: https://cseweb.ucsd.edu/~jmcauley/datasets.html#amazon_reviews
+- Children's Book Reviews: https://sites.google.com/eng.ucsd.edu/ucsdbookgraph/home
+- Finance News: https://www.kaggle.com/ankurzing/sentiment-analysis-for-financial-news
 
 ### How to run:
 We recommend running the notebooks using RStudio. The following libraries are required: 
