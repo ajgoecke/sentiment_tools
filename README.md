@@ -28,10 +28,10 @@ We recommend to run the notebooks using RStudio. The following libraries are req
 
 To reproduce the project, execute the notebooks in the following order:
 #### 1. Folder Preprocessing
-## Loading Datasets: 
+###### Loading Datasets: 
 This notebook is used to load the corpus data, apply some light preprocessing and create subsets of 1000 examples with an equal rating distribution for each corpus. Links to download the corpora can be found in the notebook.
 
-## Further Preprocessing:
+###### Further Preprocessing:
 This notebook contains code to make the datasets corresponding to three additional test conditions with including lemmatization and stopwords or one of them. The stopword list we used features also the most frequent neutral words as recognied by the lexica. Therefore the sentiment results of the base configuration are needed before the additional conditions can be used.
 
 #### 2. Sentiment analysis
