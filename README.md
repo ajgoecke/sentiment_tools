@@ -25,16 +25,16 @@ The data used for this project can be found within the `implementation/datasets`
 This folder contains all results obtained through our evaluation and the rating scores from the lexica. 
 
 ###### coverage:
-These files contain tables showing the coverage of.... The can be obtained running the sentiment_tools notebook.
+These files contain tables showing the coverage of.... They can be obtained running the sentiment_tools notebook.
 
 ###### results test configurations: 
-The folder contains the accuracy and F1 scores of the different test conditions we tried. For furhter details about the test conditions please check section 6.3 of our report.
+The folder contains the accuracy and F1 scores of the different test conditions we tried. For further details about the test conditions please check section 6.3 of our report.
 
 ###### sentiment_scores:
 This folder has files containing the results of the lexica for the different test conditions. These results can be obtained by running the sentiment_tools script.
 
 ###### Similarity Comparisons Table:
-These csv files hold tables which show the examples of each corpus sorted by how similarly they were rated by the lexicons. The include the individual scores given by the lexicons and a similarity rating computed through absolute distance between the ratings. These results can be replicated through the notebook Similarity found in the Evaluation folder.
+These csv files hold tables which show the examples of each corpus sorted by how similarly they were rated by the lexicons. They include the individual scores given by the lexicons and a similarity rating computed through absolute distance between the ratings. These results can be replicated through the notebook Similarity found in the Evaluation folder.
 
 ###### word_counts: 
 This folder contains lists of the most common positive, negative, and neutral words for each corpus and each lexicon. These results can be obtained by running the sentiment_tools script.
@@ -49,7 +49,7 @@ To reproduce the project, execute the notebooks in the following order:
 This notebook is used to load the corpus data, apply some light preprocessing, and create subsets of 1000 examples with an equal rating distribution for each corpus. Links to download the corpora can be found in the notebook.
 
 ###### Further Preprocessing:
-This notebook contains code to make the datasets corresponding to three additional test conditions with including lemmatization and stopwords or one of them. The stopword list we used features also the most frequent neutral words as recognized by the lexica. Therefore, the sentiment results of the base configuration are needed before the additional conditions can be used.
+This notebook contains code to make the datasets corresponding to three additional test conditions with including lemmatization and stop words or one of them. The stop word list we used features also the most frequent neutral words as recognized by the lexica. Therefore, the sentiment results of the base configuration are needed before the additional conditions can be used.
 
 ###### Correlation_Parlvote:
 This notebook contains a correlation analysis between the party affiliation of a speaker, the party bringing the motion and the sentiment rating. For further details see the discussion section of our paper. 
@@ -57,7 +57,7 @@ This notebook contains a correlation analysis between the party affiliation of a
 #### 2. Sentiment analysis
 ###### sentiment_tools:
 This notebook contains the code to load the preprocessed data sets, run lexicon-based sentiment analysis with Afinn, Lexicoder Sentiment Dictionary and VADER on the input data sets and to calculate the coverage of the sentiment lexicons on the corpus data. The idea was to implement the sentiment tools as a black box; therefore, no changes were made for the lexicon and no additional rules, or scores were implemented. 
-The code is documented, i.e. explanations of the specific code cells can be found within the notebook itself. Within the notebook example data frames and example plots are created. To see all results and plots, please check the `implementation/results/sentiment_data` and `implementation/plots` directory.
+The code is documented, i.e., explanations of the specific code cells can be found within the notebook itself. Within the notebook example data frames and example plots are created. To see all results and plots, please check the `implementation/results/sentiment_data` and `implementation/plots` directory.
 
 #### 3. Folder Evaluation:
 This folder contains notebooks used for various evaluation tasks.
