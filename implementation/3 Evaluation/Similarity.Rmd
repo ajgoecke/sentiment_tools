@@ -1,0 +1,104 @@
+---
+title: "Similarity Comparison"
+output: html_notebook
+---
+
+The notebook ranks the corpora entries by how similar they where ranked. It also computes the cosine similarity
+```{r}
+library(dplyr)
+library(lsa)
+```
+
+
+```{r}
+#Read in Data 
+
+
+ama<- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_data/amazon_sentiment_norm1.csv")
+
+parl<-parlvote_sentiment_norm <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_data/parlvote_sentiment_norm1.csv")
+
+rev<-reviews_sentiment_norm <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_data/reviews_sentiment_norm_norm1.csv")
+
+twitter<-twitter_sentiment_norm <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_data/twitter_sentiment_norm1.csv")
+
+fin <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_scores/finance_sent_norm1.csv")
+
+```
+
+```{r}
+#The function calculates the 10 examples with the most agreement/disagreement in rating. Additionally the cosine similarity between the lexica is given
+#Args: frme: a dataframe containing sentiment ratingd by vader,afinn and lsd for one corpus
+#Out: a list containg the dataframe with added distance between the ratings, a list containg the 10 most agreeing/disagreeing examples, the cosine similarity between the lexica. 
+
+
+get_disagreement_distance<-function(frme){
+
+sums<- vector(mode = "list", length = 0)
+cos_sim<- vector(mode = "list", length = 0)
+
+#for each list compare the scores and take the distance to comapre similarity
+for(i in 1:nrow(frme)) {  
+
+  diff1<-abs(frme[i,"afinn"]-frme[i,"vader"])
+  diff2<-abs(frme[i,"afinn"]-frme[i,"lsd"])
+  diff3<-abs(frme[i,"vader"]-frme[i,"lsd"])
+  
+  sum<-diff1+diff2+diff3
+  sums<-append(sums,sum)
+  
+}
+
+#clean up the list and add it to the dataframe
+sums<-llply(sums, unlist)
+
+sums<-as.numeric(sums)
+
+frme$sums=sums
+
+#get the most dissimilar entries
+frme<-frme[order(frme$sums,decreasing = TRUE),]
+most_dis<-frme[1:10,]
+
+#get the least disimilar entries 
+#remove entries with values 0 since they are only similar due to the lexica not being able to rank the text
+
+filter_0 <- filter(frme, afinn!= 0, vader!= 0, lsd!=  0)
+filter_0<-filter_0[order(filter_0$sums,decreasing = FALSE),]
+least_dis<-filter_0[1:10,]
+
+#get cosine similarity
+cos_sim<-append(cos_sim,cosine(frme$afinn, frme$vader))
+cos_sim<-append(cos_sim,cosine(frme$afinn, frme$lsd))
+cos_sim<-append(cos_sim,cosine(frme$vader, frme$lsd))
+
+#return
+returns<-list(frme,most_dis,least_dis,cos_sim)
+
+return (returns)
+}
+
+```
+
+```{r}
+#get values
+ama_dis<-get_disagreement_distance(ama)
+book_dis<-get_disagreement_distance(rev)
+parl_dis<-get_disagreement_distance(parl)
+twitter_dis<-get_disagreement_distance(twitter)
+fin_dis<-get_disagreement_distance(fin)
+```
+
+```{r}
+#Combine the cosine similarity scores for each corpus into one data frame and calculate the average
+
+cos<-do.call(rbind, Map(data.frame, ama=unlist(ama_dis[4]), book=unlist(book_dis[4]),fin=unlist(fin_dis[4]),parl=unlist(parl_dis[4]),twitter=unlist(twitter_dis[4])))
+
+cos$average<-rowMeans(cos)
+
+Stats <- summarize_all(cos, mean)
+
+cos <- rbind(cos, Stats)
+
+rownames(cos) <- c("afinn-vader", "afinn-lsd","vader-lsd","Average")
+```

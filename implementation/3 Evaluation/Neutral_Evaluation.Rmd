@@ -1,0 +1,366 @@
+---
+title: "Neutral Evaluation"
+output: html_notebook
+---
+
+The Notebook calculates the Accuracy and F1 score for the test condition with neutral labels. It also asses whether the performance differences are statistically significant
+```{r}
+library(caret) 
+library(dplyr)
+library(plyr)
+library (janitor)
+```
+
+
+```{r}
+#Read in Data 
+
+ama<- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_scores/amazon_config3_sent_norm1.csv")
+
+
+rev<- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_scores/reviews_config3_sent_norm1.csv")
+
+twitter <-read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_scores/twitter_config3_sent_norm1.csv")
+
+fin <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_scores/finance_config3_sent_norm1.csv")
+
+```
+
+
+```{r}
+#The function calculates the choosen metrics for the dataframe
+#Args: Dataframe, 
+#boolean flags for choosen metric
+#threshold: an int indicating the cutoff point for neutral values
+#Out: A list of results:
+#1: The confusion matrix and additional information
+#2: The F1 score
+#3: The accuracy score
+
+get_metrics <- function(frame,f1=FALSE,matrix=FALSE,accuracy=FALSE,threshold=0) {
+
+#The gold labels are the ratings of the frame (pre normalised to -1 and 1)
+gold<-frame[,"rating"]
+ 
+#make a subframe of only the lexica values
+names <- c("afinn", "lsd", "vader")
+names<-frame[names]
+
+conf <- vector(mode = "list", length = 0) 
+acc <- vector(mode = "list", length = 0) 
+Fone <- vector(mode = "list", length = 0) 
+
+for(i in 1:ncol(names)) {
+  
+#make prediction for the lexica with the options positive,negative,neutral 
+  
+  pred<-names[,i]
+  
+  pred[pred>threshold]<- 1
+  pred[pred<threshold]<- -1
+  pred[pred>=threshold & pred<=threshold]<-0
+  
+  
+  #Return a confusionmatrix
+  if(matrix==TRUE){
+    
+    hold<-do.call(rbind, Map(data.frame, pred=pred, gold=gold))
+  
+    conf<-table(hold$pred, hold$gold)
+  }
+  
+  
+#calculate accuracy of examples
+  if(accuracy==TRUE){
+    right = as.integer(0) 
+    wrong=as.integer(0)
+    
+    for (i in 1:length(pred)) { 
+      if (pred[i]==gold[i]){
+        right=right+1}
+      
+      if (pred[i]!=gold[i]){
+        wrong=wrong+1}
+      }
+   
+   acc_score<-right/(right+wrong)
+   acc<-c(acc,acc_score) 
+  }
+  
+#call multiclass F1 function
+  if (f1==TRUE){
+    
+  F1<-f1_score(pred,gold)
+  Fone<-c(Fone,F1)
+}
+
+} 
+
+result <- list( conf, Fone,acc )
+ 
+return (result)
+
+}
+```
+
+
+```{r}
+
+#Function taken from https://stackoverflow.com/questions/8499361/easy-way-of-counting-precision-recall-and-f1-score-in-r
+
+#The function calculates the F1 score for multiclass examples
+#Args: predicted: a vector with predicted values
+#      expected: a vector with the gold labels
+#      an indicator of the positive class for binary classification
+#Out: the F1 score 
+f1_score <- function(predicted, expected, positive.class="1") {
+    predicted <- factor(as.character(predicted), levels=unique(as.character(expected)))
+    expected  <- as.factor(expected)
+    cm = as.matrix(table(expected, predicted))
+
+    precision <- diag(cm) / colSums(cm)
+    recall <- diag(cm) / rowSums(cm)
+    f1 <-  ifelse(precision + recall == 0, 0, 2 * precision * recall / (precision + recall))
+
+    #Assuming that F1 is zero when it's not possible compute it
+    f1[is.na(f1)] <- 0
+
+    #Binary F1 or Multi-class macro-averaged F1
+    ifelse(nlevels(expected) == 2, f1[positive.class], mean(f1))
+}
+```
+
+```{r}
+
+#The function takes the output of "get_metrics" and combines the dataframes of the different corpora into one dataframe.
+#The number indicates which metric is choosen:
+##1: The confusion matrix and additional information
+#2: The F1 score
+#3: The accuracy score
+#Args: multiple list containg frame specific metrics
+#Out: a dataframe showing the choosen metric for all corpora
+
+get_comb_metric<-function(ama,rev,twit,fin,num){
+
+ 
+ama<-ama[num]
+rev<-rev[num]
+twit<-twit[num]
+fin<-fin[num]
+
+
+ama<-llply(ama, unlist)
+rev<-llply(rev, unlist)
+twit<-llply(twit, unlist)
+fin<-llply(fin, unlist)
+
+
+comb<-do.call(rbind, Map(data.frame, ama=ama, books=rev,twitter=twit,finance=fin))
+names <- c("afinn", "lsd", "vader")
+
+comb$id <- names 
+
+comb<-comb[,c(5,1,2,3,4)]
+
+return (comb)
+}
+```
+
+
+```{r}
+#Rating normalisation
+
+ama$rating[ama$rating<3] <- -1
+ama$rating[ama$rating>3] <- 1
+ama$rating[ama$rating==3 ] <- 0
+
+rev$rating[rev$rating<2] <- -1
+rev$rating[rev$rating>2] <- 1
+rev$rating[rev$rating==2] <- 0
+
+```
+
+```{r}
+# #if needed run this chunk to compute the best threshold
+# all_acc <- rep(NA, 0)
+# all_f1 <- rep(NA, 0)
+# 
+# thresh<-seq(0.01, 0.25, by=0.01)
+# 
+# for (i in thresh){
+#   
+# metrics_ama<-get_metrics(ama,accuracy = TRUE, f1=TRUE,threshold=i)
+# 
+# metrics_reviews<-get_metrics(rev,accuracy = TRUE,f1=TRUE,threshold=i)
+# 
+# metrics_twitter_red<-get_metrics(twitter,accuracy = TRUE,f1=TRUE,threshold=i)
+# 
+# metrics_fin_red<-get_metrics(fin,accuracy = TRUE,f1=TRUE,threshold=i)
+# 
+# acc_comb<-get_comb_metric(metrics_ama,metrics_reviews,metrics_twitter_red,metrics_fin_red,3)
+# hold<-acc_comb[c("ama","books","twitter","finance")]
+# 
+# acc_comb$average<-rowMeans(hold)
+# 
+# 
+# Stats <- summarize_all(acc_comb, mean)
+# 
+# 
+# Stats$id<-"Mean of column"
+# 
+# Stats<-Stats[,c(6,1,2,3,4,5)]
+# acc_comb <- rbind(acc_comb, Stats)
+# 
+# all_acc<-append(all_acc,acc_comb[4,6])
+# 
+# 
+# 
+# 
+# f1_comb<-get_comb_metric(metrics_ama,metrics_reviews,metrics_twitter_red,metrics_fin_red,2)
+# hold<-f1_comb[c("ama","books","twitter","finance")]
+# 
+# 
+# f1_comb$average<-rowMeans(hold)
+# 
+# Stats <- summarize_all(f1_comb, mean)
+# 
+# 
+# Stats$id<-"Mean of column"
+# 
+# Stats<-Stats[,c(6,1,2,3,4,5)]
+# f1_comb <- rbind(f1_comb, Stats)
+# all_f1<-append(all_f1,f1_comb[4,6])
+# 
+# }
+# 
+# print("acc")
+# print(all_acc)
+# print("------------")
+# print("f1")
+# print(all_f1)
+# print("-------------")
+# print(which.max( all_acc ))
+```
+
+
+```{r}
+#Get chosen per Corpus metrics if threshold is known
+
+metrics_ama<-get_metrics(ama,accuracy = TRUE, f1=TRUE,threshold=0.08)
+
+metrics_reviews<-get_metrics(rev,accuracy = TRUE,f1=TRUE,threshold=0.08)
+
+metrics_twitter_red<-get_metrics(twitter,accuracy = TRUE,f1=TRUE,threshold=0.08)
+
+metrics_fin_red<-get_metrics(fin,accuracy = TRUE,f1=TRUE,threshold=0.08)
+
+
+acc_comb<-get_comb_metric(metrics_ama,metrics_reviews,metrics_twitter_red,metrics_fin_red,3)
+hold<-acc_comb[c("ama","books","twitter","finance")]
+
+acc_comb$average<-rowMeans(hold)
+
+
+Stats <- summarize_all(acc_comb, mean)
+
+
+Stats$id<-"Mean of column"
+
+Stats<-Stats[,c(6,1,2,3,4,5)]
+acc_comb <- rbind(acc_comb, Stats)
+
+
+f1_comb<-get_comb_metric(metrics_ama,metrics_reviews,metrics_twitter_red,metrics_fin_red,2)
+hold<-f1_comb[c("ama","books","twitter","finance")]
+
+
+f1_comb$average<-rowMeans(hold)
+
+Stats <- summarize_all(f1_comb, mean)
+
+
+Stats$id<-"Mean of column"
+
+Stats<-Stats[,c(6,1,2,3,4,5)]
+f1_comb <- rbind(f1_comb, Stats)
+
+
+
+```
+
+
+```{r}
+#if needed save
+#setwd("~/Studium/3 Semester/PM/Acc_F1_configs")
+#saveRDS(acc_comb,file="baseline_neut_acc_a2_b2.rds")
+#saveRDS(f1_comb,file="baseline_neut_f1_a2_b2.rds")
+```
+
+
+
+
+Correlation
+
+Comapre Lexica
+```{r}
+acc_c<-get_comb_metric(metrics_ama,metrics_reviews,metrics_twitter_red,metrics_fin_red,3)
+
+
+acc_t<-t(acc_c)
+acc_t<-acc_t%>%
+row_to_names(row_number = 1)
+acc_t <- as.data.frame(acc_t)
+st_acccorp <- stack(acc_t)
+
+res.aov <- aov(values ~ ind, data = st_acccorp)
+summary(res.aov)
+print("-------------Tukey-------------")
+TukeyHSD(res.aov)
+```
+
+```{r}
+f1_c<-get_comb_metric(metrics_ama,metrics_reviews,metrics_twitter_red,metrics_fin_red,2)
+
+
+f1_t<-t(f1_c)
+f1_t<-f1_t%>%
+row_to_names(row_number = 1)
+f1_t <- as.data.frame(f1_t)
+st_f1corp <- stack(f1_t)
+
+res.aov <- aov(values ~ ind, data = st_f1corp)
+summary(res.aov)
+print("-------------Tukey-------------")
+TukeyHSD(res.aov)
+```
+
+
+Compare Corpora
+```{r}
+
+acc_c<-get_comb_metric(metrics_ama,metrics_reviews,metrics_twitter_red,metrics_fin_red,3)
+
+acc_co <- data.frame(acc_c[,-1], row.names = acc_c[,1])
+
+st_acc <- stack(acc_co)
+
+res.aov <- aov(values ~ ind, data = st_acc)
+summary(res.aov)
+print("-------------Tukey-------------")
+TukeyHSD(res.aov)
+```
+
+F1
+```{r}
+f1_c<-get_comb_metric(metrics_ama,metrics_reviews,metrics_twitter_red,metrics_fin_red,2)
+
+f1_co <- data.frame(f1_c[,-1], row.names = f1_c[,1])
+
+st_f1 <- stack(f1_co)
+
+res.aov <- aov(values ~ ind, data = st_f1)
+summary(res.aov)
+print("-------------Tukey-------------")
+TukeyHSD(res.aov)
+```
+
