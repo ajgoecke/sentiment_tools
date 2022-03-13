@@ -1,0 +1,103 @@
+---
+title: "Correlation ParlVote"
+output: html_notebook
+---
+The Notebook calculates the correlation between the Party Affiliation of the speaker and the Party bringing the motion in the ParlVote Corpus and compares this to the correlation between the predicted values of the lexica and the gold labels
+```{r}
+library(dplyr)
+```
+
+
+Make a Corpus which includes the party affiliation. 
+```{r}
+ParlVote_concat <- read.csv("~/Studium/3 Semester/PM/Corpora/ParlVote_concat.csv")
+```
+
+```{r}
+#only use relevant columns and throw out entries with non ascii characters
+parl_vote<- subset(ParlVote_concat, select = c("motion_party","party","speech","vote"))
+
+parl_vote <-parl_vote[which(!grepl("[^\x01-\x7F]+",parl_vote$speech)),]
+
+#Only choose the two biggest parties to make comparison easier
+parl_vote<-subset(parl_vote, motion_party=='labour'|motion_party=="conservative")
+
+parl_vote<-subset(parl_vote, party=='labour'|party=="conservative")
+
+
+#Rename columns to standard column name
+parl_vote<-parl_vote %>% 
+ rename(
+    text = speech,
+    rating = vote)
+
+#change the negative ratign to -1 to be consistent 
+parl_vote$rating[parl_vote$rating == 0] <- -1
+
+
+#sample 500 positive and negative examples
+red_parl_vote <- data.frame(text=character(),
+                 rating=integer(), 
+                 stringsAsFactors=FALSE) 
+
+hold<- subset(parl_vote, rating == -1)
+
+red_parl_vote <- rbind(red_parl_vote, hold[sample(nrow(hold), 500), ])
+
+hold<- subset(parl_vote, rating == 1)
+
+red_parl_vote <- rbind(red_parl_vote, hold[sample(nrow(hold), 500), ])
+
+
+#add ID column
+red_parl_vote$id <- 1:nrow(red_parl_vote) 
+red_parl_vote<-red_parl_vote[,c(5,1,2,3,4)]
+
+```
+
+```{r}
+#save if needed
+#saveRDS(red_parl_vote, file = "corr_part.rds")
+```
+
+
+Results of this corpus
+```{r}
+parl_res<- read.csv("~/Studium/3 Semester/PM/Datasets/parlvote_corr_norm1.csv")
+```
+
+Correlation between party and gold label
+```{r}
+
+corr_part<-parl_res[c("motion_party","party","rating")]
+
+#Check if the speaker belongs to the party that brought up the motion
+equ<-corr_part$motion_party==corr_part$party
+corr_part$equality=equ
+
+
+comp<-corr_part[c("rating","equality")]
+
+party_sentiment_corr<-cor(comp$rating, comp$equality, method = c("pearson"), 
+    use = "complete.obs")
+```
+
+
+```{r}
+lex_corr<-parl_res[c("lsd","afinn","vader")]
+
+#normalise the ratings to positive or negative
+lex_corr[lex_corr>0] <- 1
+lex_corr[lex_corr<=0] <- -1
+ 
+#Choose one rating for each entry per majority vote 
+lex_corr$sums=rowSums(lex_corr)
+
+lex_corr[lex_corr>0] <- 1
+lex_corr[lex_corr<=0] <- -1
+
+
+lexicon_sentiment_corr<-cor(parl_res$rating, lex_corr$sums, method = c("pearson"), 
+    use = "complete.obs")
+
+```

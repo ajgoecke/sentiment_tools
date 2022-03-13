@@ -1,0 +1,216 @@
+---
+title: "Preprocessing Test Conditions"
+output: html_notebook
+---
+
+The notebook implement further data preprocessing to allow for different testing conditions. It implements lemmatization and stopwords. 
+```{r}
+library(tm)
+library(plyr)
+library(textstem)
+```
+
+```{r}
+#Load the basic pre-processed corpora
+
+setwd("~/Studium/3 Semester/PM/Datasets/Baseline")
+
+twitter <- readRDS("twitterbin_config_base.rds")
+amazon <- readRDS("ama_config_base.rds")
+parl<- readRDS("parl_config_base.rds")
+book<- readRDS("books_config_base.rds")
+fin<- readRDS("finbin_config_base.rds")
+
+```
+
+```{r}
+#The function changes the text in the frame to lowercase, lemmatizes and removes common stopwords. Additionally corpus specific stopwords are removed
+#Args: frame: a dataframe with a text-column 
+#     stopwords_list: a list of corpus specific stopwords
+#Out: a dataframe with a processed text-column
+further_processing<-function(frame,stopword_list){
+
+
+#lowercase everything   
+frame$text<-tolower(frame$text)  
+ 
+ 
+##remove stop words
+
+textlist<-frame$text
+
+#create empty list
+stop_removed <- vector(mode = "list", length = 0) 
+
+for (i in textlist){
+   
+  #remove common stopwords
+  hold<-removeWords(i,words=en_stopwords)
+  
+  #remove specific stopwords
+  hold1<-removeWords(hold, words = stopword_list )
+  
+  stop_removed<- c(stop_removed,hold1)
+  }
+
+#place the removed words back in the text
+
+stop_removed<-llply(stop_removed, unlist)
+frame$text=stop_removed  
+
+
+
+##lemmatize
+lemma_dictionary <- make_lemma_dictionary(frame, engine = 'hunspell')
+frame$text<-lemmatize_strings(frame$text, dictionary = lemma_dictionary)  
+
+return(frame)
+  
+}
+```
+
+
+```{r}
+
+#get a stopword list remove entries that have negation
+en_stopwords <- stopwords::stopwords("en", source="snowball" )
+en_stopwords<-en_stopwords[-c(126, 81:98,165:167)]
+
+
+#get processed frames
+ama_pro<-further_processing(amazon,stopwords_amazon)
+twitter_pro<-further_processing(twitter,stopwords_twitter)
+book_pro<-further_processing(book,stopwords_books)
+parl_pro<-further_processing(parl,stopwords_parl)
+fin_pro<-further_processing(fin,stopwords_fin)
+
+#clean up data
+ama_pro$text<-unlist(ama_pro$text)
+twitter_pro$text<-unlist(twitter_pro$text)
+book_pro$text<-unlist(book_pro$text)
+parl_pro$text<-unlist(parl_pro$text)
+fin_pro$text<-unlist(fin_pro$text)
+
+
+```
+
+```{r}
+#if needed save
+#setwd("~/Studium/3 Semester/PM/Datasets/config_3")
+
+#saveRDS(ama_pro, file = "ama_config_3.rds")
+#saveRDS(twitter_pro, file ="twitterbin_config_3.rds")
+#saveRDS(book_pro, file = "book_config_3.rds")
+#saveRDS(parl_pro, file = "parl_config_3.rds")
+#saveRDS(fin_pro, file = "fin_configbin_3.rds")
+```
+
+
+
+
+Get the specific stopword lists
+
+```{r}
+#Corpus and lexica specific most used words
+
+amazon_afinn_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/amazon_afinn_topn.csv")
+
+amazon_vader_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/amazon_vader_topn.csv")
+
+amazon_lsd_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/amazon_lsd_topn.csv")
+
+parlvote_afinn_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/parlvote_afinn_topn.csv")
+
+parlvote_vader_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/parlvote_vader_topn.csv")
+
+parlvote_lsd_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/parlvote_lsd_topn.csv")
+
+reviews_afinn_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/reviews_afinn_topn.csv")
+
+reviews_vader_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/reviews_vader_topn.csv")
+
+reviews_lsd_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/reviews_lsd_topn.csv")
+
+twitter_afinn_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/twitter_afinn_topn.csv")
+
+twitter_vader_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/twitter_vader_topn.csv")
+
+twitter_lsd_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/twitter_lsd_topn.csv")
+
+
+fin_afinn_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/finance_afinn_topn.csv")
+
+fin_vader_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_data/finance_vader_topn.csv")
+
+fin_lsd_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/finance_lsd_topn.csv")
+
+
+```
+
+
+```{r}
+#The function extracts a list of the most used neutral words of a corpus for further use as a stop word list
+#Args: Dataframes containing words, their sentiment rating and the number they are used, specific for each lexica
+#Out: a list containing the 10 most used neutral words for a corpus. 
+
+get_corpus_top_list<-function(vader,afinn,lsd){
+
+  #rename rating to sentiment
+  names(vader)[names(vader) == 'vader'] <- 'sentiment'
+  names(afinn)[names(afinn) == 'afinn'] <- 'sentiment'
+  names(lsd)[names(lsd) == 'lsd'] <- 'sentiment'
+  
+  #select only neutral words
+  vader_neut<-vader[vader$sentiment == 0,]
+  afinn_neut<-afinn[afinn$sentiment== 0,]
+  lsd_neut<-lsd[lsd$sentiment== 0,]
+  
+  #order by frequency
+  vader_neut <- vader_neut[order(vader_neut$n, decreasing = TRUE), ] 
+  afinn_neut <- afinn_neut[order(afinn_neut$n, decreasing = TRUE), ] 
+  lsd_neut <- lsd_neut[order(lsd_neut$n, decreasing = TRUE), ] 
+  
+  #select top 10
+  vader_top<- vader_neut[1:10,]
+  afinn_top<- afinn_neut[1:10,]
+  lsd_top<- lsd_neut[1:10,]
+  
+  #collect into one dataframe
+  neutral_top <- rbind(vader_top, afinn_top,lsd_top)
+  #remove duplicates
+  neutral_top<-neutral_top[!duplicated(neutral_top), ]
+  
+  #extract tokens
+  tok <- list(neutral_top$token)   
+  
+  return (tok)
+ 
+  
+  }
+
+
+```
+
+
+```{r}
+#get stopwords
+stopwords_amazon<-get_corpus_top_list(amazon_vader_topn,amazon_afinn_topn,amazon_lsd_topn)
+stopwords_amazon<-unlist(stopwords_amazon)
+
+
+stopwords_books<-get_corpus_top_list(reviews_vader_topn,reviews_afinn_topn,reviews_lsd_topn)
+stopwords_books<-unlist(stopwords_books)
+
+
+stopwords_twitter<-get_corpus_top_list(twitter_vader_topn,twitter_afinn_topn,twitter_lsd_topn)
+stopwords_twitter<-unlist(stopwords_twitter)
+
+
+stopwords_parl<-get_corpus_top_list(parlvote_vader_topn,parlvote_afinn_topn,parlvote_lsd_topn)
+stopwords_parl<-unlist(stopwords_parl)
+
+stopwords_fin<-get_corpus_top_list(fin_vader_topn,fin_afinn_topn,fin_lsd_topn)
+stopwords_fin<-unlist(stopwords_fin)
+```
+
+

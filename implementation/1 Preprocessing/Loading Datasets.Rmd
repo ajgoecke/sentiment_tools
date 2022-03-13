@@ -1,0 +1,354 @@
+---
+title: "Preprocessing the data sets"
+output: html_notebook
+---
+This notebook loads the corpora and applies preprocessing
+```{r}
+library(textcat)
+library(dplyr)
+```
+
+ParlVote Corpus
+```{r}
+#Load ParlVote Data Set
+#https://data.mendeley.com/datasets/czjfwgs9tm/1
+
+ParlVote_concat <- read.csv("~/Studium/3 Semester/PM/Corpora/ParlVote_concat.csv")
+```
+
+```{r}
+
+#only use relevant columns and throw out entries with non ascii characters
+parl_vote<- subset(ParlVote_concat, select = c("speech","vote"))
+parl_vote <-parl_vote[which(!grepl("[^\x01-\x7F]+",parl_vote$speech)),]
+
+#Rename columns to standard column name
+parl_vote<-parl_vote %>% 
+ rename(
+    text = speech,
+    rating = vote)
+
+#change the negative ratign to -1 to be consistent 
+parl_vote$rating[parl_vote$rating == 0] <- -1
+
+
+#sample 500 positive and negative examples
+red_parl_vote <- data.frame(text=character(),
+                 rating=integer(), 
+                 stringsAsFactors=FALSE) 
+
+hold<- subset(parl_vote, rating == -1)
+
+red_parl_vote <- rbind(red_parl_vote, hold[sample(nrow(hold), 500), ])
+
+hold<- subset(parl_vote, rating == 1)
+
+red_parl_vote <- rbind(red_parl_vote, hold[sample(nrow(hold), 500), ])
+
+
+#add ID column
+red_parl_vote$id <- 1:nrow(red_parl_vote) 
+red_parl_vote<-red_parl_vote[,c(3,1,2)]
+
+```
+
+
+
+Book Review Corpus
+
+```{r}
+#Load Corpus
+#https://sites.google.com/eng.ucsd.edu/ucsdbookgraph/home
+
+setwd("/Users/rike-/Documents/Studium/3 Semester/PM/Corpora")
+
+reviews <- read.csv("~/Studium/3 Semester/PM/Corpora/goodreads_reviews_children.json", header=FALSE)
+
+```
+
+```{r}
+#add language tags to corpus (takes time)
+
+#takes quite long
+#reviews$language <- textcat(reviews$V5)
+#saveRDS(reviews, file = "reviews_with_language.rds")
+
+#or load corpus with languages already added
+filename <- file.choose()
+reviews <- readRDS(filename)
+
+```
+
+
+```{r}
+
+#filter out any non english reviews
+reviews<-reviews[reviews$language== "english",]
+
+#filter out non english characters
+reviews <-reviews[which(!grepl("[^\x01-\x7F]+",reviews$text)),]
+
+#remove line breaks
+reviews$text<-gsub("[\n]", "", reviews$text)
+
+
+#filter for only rating and text columns and make equal distribution
+red_review <- data.frame(text=character(),
+                 rating=integer(), 
+                 stringsAsFactors=FALSE) 
+
+#the 0 ratings are not used since they dont provide sentiment
+
+for (i in 1:5){
+
+hold<- subset(reviews, rating == i, select = c("text","rating"))
+
+red_review <- rbind(red_review, hold[sample(nrow(hold), 200), ])
+}
+
+red_review<-as.data.frame(red_review)
+
+#add an ID
+red_review$id <- 1:nrow(red_review) 
+red_review<-red_review[,c(3,1,2)]
+ 
+red_review%>%
+  count(rating)
+
+```
+
+Twitter Corpus
+```{r}
+#load corpus
+#https://www.kaggle.com/crowdflower/first-gop-debate-twitter-sentiment
+
+twitter <- read.csv("~/Studium/3 Semester/PM/Corpora/Sentiment.csv", comment.char="#")
+```
+
+
+```{r}
+
+
+#filter only text and rating column and take only entries with a confidence over 0.6
+red_twitter<- subset(twitter,sentiment_confidence <0.6, select = c("text","sentiment"))
+
+#remove examples with empty text
+red_twitter <- red_twitter[-which(red_twitter$text == ""), ]
+
+red_twitter$text<-gsub("RT", "", red_twitter$text)
+
+red_twitter$text<-gsub("[\n]", "", red_twitter$text)
+
+red_twitter <- red_twitter[which(!grepl("[^\u0001-\u007F]+", red_twitter$text)),]
+ 
+#rename columns 
+red_twitter<-red_twitter%>% 
+ rename(rating = sentiment)
+
+#make rating consistent
+red_twitter$rating[red_twitter$rating == "Negative"] <- -1
+red_twitter$rating[red_twitter$rating == "Neutral"] <- 0
+red_twitter$rating[red_twitter$rating == "Positive"] <- 1
+red_twitter<-transform(red_twitter, rating = as.numeric(rating))
+
+
+
+get_twitter_subset<-function(red_twitter,binary =FALSE){
+  
+if(binary==FALSE){
+    
+#get 1000 samples 
+
+red_twit <- data.frame(text=character(),
+                 rating=integer(), 
+                 stringsAsFactors=FALSE) 
+
+hold<- subset(red_twitter, rating == -1)
+
+red_twit <- rbind(red_twit, hold[sample(nrow(hold), 350), ])
+
+hold<- subset(red_twitter, rating == 0)
+
+red_twit <- rbind(red_twit, hold[sample(nrow(hold), 350), ])
+
+hold<- subset(red_twitter, rating == 1)
+
+red_twit <- rbind(red_twit, hold[sample(nrow(hold), 300), ])
+}
+
+
+if (binary==TRUE){
+
+#or do the same with a binary distribution
+
+red_twit <- data.frame(text=character(),
+                 rating=integer(), 
+                 stringsAsFactors=FALSE) 
+
+hold<- subset(red_twitter, rating == -1)
+
+red_twit <- rbind(red_twit, hold[sample(nrow(hold), 300), ])
+
+hold<- subset(red_twitter, rating == 1)
+
+red_twit <- rbind(red_twit, hold[sample(nrow(hold), 300), ])
+}
+  
+return (red_twit)  
+}
+
+#get the subset eiter with positve,negative,neutral labels or 
+#with neutral labels excluded
+red_twit<-get_twitter_subset(red_twitter)
+
+#add ID
+red_twit$id <- 1:nrow(red_twit) 
+red_twit<-red_twit[,c(3,1,2)]
+
+#show rating distribution
+#red_twit%>%
+#  count(rating)
+```
+
+
+Amazon Product Reviews
+```{r}
+#Load partial Corpus 
+#https://cseweb.ucsd.edu/~jmcauley/datasets.html#amazon_reviews
+
+ama <- read.csv("C:/Users/rike-/Desktop/Industrial_and_Scientific.json.gz", header=FALSE,nrows=90000)
+```
+
+```{r}
+#The data structure got messed up for some entries.
+#Take only entries that have the key words "overall" and "review Text" in the right columns to ensure the correct data structure
+ama_rev <- ama[grep("overall", ama$V1),]
+ama_rev <- ama_rev[grep("reviewText", ama_rev$V7),]
+
+#filter out any entries that have all information in one column
+ama_rev<-dplyr::filter(ama_rev, !grepl("reviewerName",V7))
+
+#make subset of only rating and text
+ama_rev<- subset(ama_rev, select = c("V1","V7"))
+
+#change name
+ama_rev<-ama_rev%>% 
+ rename(rating = V1,text=V7)
+
+#throw the key word "reviewText" from the rating
+ama_rev[,"text"]<-gsub("reviewText:", "",ama_rev[,"text"])
+
+ama_rev[,"text"]<-gsub("[\n]", "",ama_rev[,"text"])
+ama_rev[,"text"]<-gsub("[\\]", "",ama_rev[,"text"])
+
+#transform rating into integer
+ama_rev$rating[ama_rev$rating == "{overall: 5.0"] <- 5
+ama_rev$rating[ama_rev$rating == "{overall: 4.0"] <- 4
+ama_rev$rating[ama_rev$rating == "{overall: 3.0"] <- 3
+ama_rev$rating[ama_rev$rating == "{overall: 2.0"] <- 2
+ama_rev$rating[ama_rev$rating == "{overall: 1.0"] <- 1
+ama_rev<-transform(ama_rev, rating = as.numeric(rating))
+
+#remove NA
+ama_rev<-ama_rev[!is.na(ama_rev$rating),]
+
+
+red_ama <- data.frame(id=integer(),
+                 text=character(),
+                 rating=integer(), 
+                 stringsAsFactors=FALSE) 
+
+#make new dataframe with 1000 entires and equal distribution
+for (i in 1:5){
+
+hold<- subset(ama_rev, rating == i, select = c("text","rating"))
+
+red_ama <- rbind(red_ama, hold[sample(nrow(hold), 200), ])
+}
+
+#add ID
+red_ama$id <- 1:nrow(red_ama) 
+red_ama<-red_ama[,c(3,1,2)]
+
+
+red_ama%>%
+  count(rating)
+#ama_rev%>%
+ # count(rating)
+```
+
+Finance
+```{r}
+#https://www.kaggle.com/ankurzing/sentiment-analysis-for-financial-news
+finance <- read.csv("~/Studium/3 Semester/PM/Corpora/archive/all-data.csv")
+```
+
+```{r}
+
+#rename
+finance<-finance%>% 
+ rename(rating = neutral, text=According.to.Gran...the.company.has.no.plans.to.move.all.production.to.Russia...although.that.is.where.the.company.is.growing..)
+
+finance$rating[finance$rating == "negative"] <- -1
+finance$rating[finance$rating == "neutral"] <- 0
+finance$rating[finance$rating == "positive"] <- 1
+finance<-transform(finance, rating = as.numeric(rating))
+
+
+get_subset_finance<-function(finance,binary=FALSE){
+  
+  
+if(binary==FALSE){
+#get 1000 samples with equal distribution
+fin <- data.frame(text=character(),
+                 rating=integer(), 
+                 stringsAsFactors=FALSE) 
+
+for (i in -1:1){
+hold<- subset(finance, rating == i)
+
+fin<- rbind(fin, hold[sample(nrow(hold), 334), ])
+}
+#remove the two lines to get exactly 1000 entries
+fin<-fin[-c(1,1000), ]
+
+}
+
+if (binary==TRUE){
+#or do the same with a binary distribution
+
+fin <- data.frame(text=character(),
+                 rating=integer(), 
+                 stringsAsFactors=FALSE) 
+
+hold<- subset(finance, rating == -1)
+
+fin<- rbind(fin, hold[sample(nrow(hold), 500), ])
+
+hold<- subset(finance, rating == 1)
+
+fin <- rbind(fin, hold[sample(nrow(hold), 500), ])
+
+}
+return (fin)
+}
+
+fin<-get_subset_finance(finance)
+#add id
+fin$id <- 1:nrow(fin) 
+fin<-fin[,c(3,2,1)]
+
+
+
+```
+
+
+```{r}
+#if needed save the reduced Dataframes
+
+#saveRDS(red_twit, file = "twitter_config_base.rds")
+#saveRDS(red_parl_vote, file = "parl_config_base.rds")
+#saveRDS(red_review, file = "books_config_base.rds")
+#saveRDS(red_ama, file = "ama_config_base.rds")
+#saveRDS(fin,file="fin_config_base.rds")
+```
