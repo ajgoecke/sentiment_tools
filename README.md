@@ -27,7 +27,7 @@ This folder contains all results obtained through our evaluation and the rating 
 ###### coverage:
 These files contain tables showing the coverage of.... The can be obtained running the sentiment_tools notebook.
 
-###### results test configurations 
+###### results test configurations: 
 The folder contains the accuracy and F1 scores of the different test conditions we tried. For furhter details about the test conditions please check section 6.3 of our report.
 
 ###### sentiment_scores:
