@@ -37,8 +37,9 @@ This notebook contains code to make the datasets corresponding to three addition
 This notebook contains a correlation analysis between the party affiliation of a speaker, the party bringing the motion and the sentiment rating. For further explanations see the discussion section of the paper. 
 
 #### 2. Sentiment analysis
+###### sentiment_tools:
 This notebook contains the code to load the preprocessed data sets, run lexicon-based sentiment analysis with Afinn, Lexicoder Sentiment Dictionary and VADER on the input data sets and to calculate the coverage of the sentiment lexicons on the corpus data. The idea was to implement the sentiment tools as a black box; therefore, no changes were made for the lexicon and no additional rules, or scores were implemented. 
-The code is well documented, and explanations of the specific code cells can be found within the notebook itself. Within the notebook example data frames and example plots are created. To see all results and plots, please check the `implementation/sentiment_data` and `implementation/plots` directory.
+The code is documented, i.e. explanations of the specific code cells can be found within the notebook itself. Within the notebook example data frames and example plots are created. To see all results and plots, please check the `implementation/sentiment_data` and `implementation/plots` directory.
 
 #### 3. Folder Evaluation:
 This folder contains notebooks used for various evaluation tasks. All results can also be found in the XXX folder.
