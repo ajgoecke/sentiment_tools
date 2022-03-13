@@ -1,0 +1,405 @@
+---
+title: "Comparison of Sentiment Tools across Domains"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+### Requirements
+Please install and load all required libraries before executing this notebook. 
+```{r}
+# install required libraries
+#install.packages("quanteda")
+#install.packages("devtools")
+#devtools::install_github("quanteda/quanteda.sentiment")
+#install.packages("vader")
+#install.packages("readtext")
+#install.packages("tidyverse")
+#install.packages("tidytext")
+#install.packages("reshape2")
+
+# load required libraries
+library(quanteda)
+library(quanteda.sentiment)
+library(vader)
+library(readtext)
+library(tidyverse)
+library(tidytext)
+library(reshape2)
+```
+
+### 1. Step: Load Corpus Data & Sentiment Lexicons
+We start with loading the corpus data and the sentiment lexicons. Here we will load the baseline data sets as an example for the following code. The preprocessed data sets (configurations) can be found within the `datasets/configurations` subdirectory. 
+```{r}
+# ===== DATASETS =====
+# to load data sets, make sure to first set working directory to sentiment tools folder
+#setwd(/sentiment_tools)
+
+# load BASELINE data sets: book reviews, twitter, parlvote, amazon reviews, finance 
+reviews <- readRDS(file="../datasets/baseline/books_config_base.rds")
+twitter <- readRDS(file="../datasets/baseline/twitter_config_base.rds")
+parlvote <- readRDS(file="../datasets/baseline/parl_config_base.rds")
+amazon <- readRDS(file="../datasets/baseline/ama_config_base.rds")
+finance <- readRDS(file="../datasets/baseline/fin_config_base.rds")
+
+# ===== SENTIMENT LEXICONS ======
+# load lexicons
+afinn <- data_dictionary_AFINN
+lsd <- data_dictionary_LSD2015
+```
+
+##### Look at Example Corpus: ParlVote
+Each corpus is loaded as a data frame which consists of the following columns:  
+- ID: original document id  
+- Text: will be the input to the sentiment analysis  
+- Rating: will be the gold standard to evaluate lexicon performance    
+```{r}
+parlvote
+```
+### 2. Step: Sentiment Analysis
+#### 2.1 Normalize Scores
+To normalize our sentiment scores, we use a customized min/max normalization method here, to make sure all values of the Afinn lexicon are scaled with respect to Afinn's minimum label (-5) and maximum label (+5). The computed sentiment scores will be normalized between -1 and +1.  
+The Lexicoder (LSD) and Vader lexicon are automatically normalized by the `vader` (VADER) function of the *vader* library and the `textstat_polarity` (LSD) function of the *quanteda.sentiment* library. 
+```{r}
+# ===== DATA NORMALIZATION =====
+
+# Normalize data via minimun/maximum normalization, either by scaling values from 0 to 1 or -1 to 1
+# 
+# Arg:
+#   x: input values (e.g. column of data frame)
+#   
+# Returns: 
+#   normalized data
+
+# min/max normalization from -1 to 1, relative to data frame results
+normalize <- function(x, na.rm = TRUE){
+  return(2* ((x - min(x)) / (max(x)-min(x)))-1)}
+
+# min/max normalization for afinn data, wrt to afinn scoring (-5, +5) 
+normalize_afinn <- function(x, na.rm = TRUE){
+  return(2* ((x - (-5)) / (5-(-5)))-1)}
+```
+
+#### 2.2 Compute Sentiment Scores
+NOTE: It could take a few minutes to run this function on the data sets.  
+In this step sentiment scores for the different lexicons (Afinn, LSD and Vader) are calculated by using the `texstat_valence` (Afinn) and `textstat_polarity` (LSD) functions of the *quanteda.sentiment* library and the `vader_compound` score of the *vader* library. Originally two versions of normalization were tested. For the final sentiment scoring we decided on the `normalize_afinn` function which can be found in the previous code cell. 
+```{r}
+# ===== SENTIMENT SCORES =====
+
+# Calculate sentiment scores for different lexicons and input data frames
+# 
+# Arg:
+#  data: input data frame
+#  lexicons: names of lexicons that should be used for sentiment scoring
+#  normalize: "relative" if normalization is handled relative to output, i.e. output column of afinn is being scaled via min/max normalization
+#  normalize: "afinn" if normalization is handled by taking -5 as new minimum and +5 as new maximum and everything else is scaled between
+#  get_tokens: if TRUE final data frame consists of single tokens with an associated sentiment score
+#              else final data frame consists of an associated sentiment score per input text instead (only used to calculate TOP-N words)
+#   
+# Returns: 
+#  data frame with (normalized) sentiment sores for chosen lexicons
+
+get_sentiment <- function(df, lexicons, normalize, get_tokens){
+   
+   # if we want data frame with single tokens 
+  if(get_tokens==TRUE){
+    df <- df %>%
+      # get list of tokens as new col in data frame
+      unnest_tokens(token,text)
+      
+    # assign the new col as input for sentiment lexicons
+    tok = df$token
+     
+    # for each lexicon, get sentiment scores and save scores in new column of data frame
+    for(lex in lexicons){
+      
+      # for afinn, use textstat_valence function by quanteda.sentiment 
+      # normalize = dictionary is used here to average over only the valenced words
+      if(lex == "afinn"){
+        df$afinn <- round(textstat_valence(tok, afinn, normalize="dictionary")$sentiment,3)}
+      
+      # for lexicoder, use textstat_polarity function by quanteda.sentiment
+      # normalize = sent_relpropdiff equals \frac{pos - neg}{pos + neg} and automatically scales values between -1 and 1 
+      if(lex == "lsd"){
+        df$lsd<- round(textstat_polarity(tok, lsd, fun=sent_relpropdiff)$sentiment,3)}
+      
+      # for vader, use vader function by vader library
+      # the compound score automatically normalizes the sentiment score and scales values between -1 and 1 
+      if(lex == "vader"){
+        df$vader <- round(vader_df(tok)$compound,3)}
+   }
+    
+   # if we don't want to analyze single tokens but input text as "whole"
+   }else{
+      
+      # tokenize text column
+      tok = tokens(df$text)
+      
+      # for each lexicon, proceed as before
+      for(lex in lexicons){
+         if(lex == "afinn"){
+            df$afinn <- round(textstat_valence(tok, afinn, normalize="dictionary")$sentiment,3)}
+         
+         if(lex == "lsd"){
+            df$lsd<- round(textstat_polarity(tok, lsd, fun=sent_relpropdiff)$sentiment,3)}
+         
+         if(lex == "vader"){
+            df$vader <- round(vader_df(df$text)$compound,3)}
+     }
+   }  
+   
+   # normalize sentiment scores if TRUE, VADER and LSD scores are already normalized within functions above
+   if(normalize=="afinn"){
+      df$afinn <- round(normalize_afinn(df$afinn), 3)
+   }else{
+      df$afinn <- round(normalize(df$afinn), 3)}
+   
+   # set sentiment scores to 0 if NA
+   df[is.na(df)] <- 0
+   
+   return(df)
+}
+
+# apply get_sentiment function to corpus data 
+### BASELINE corpora
+reviews_sentiment_norm1 <- get_sentiment(reviews, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+twitter_sentiment_norm1 <- get_sentiment(twitter, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+parlvote_sentiment_norm1 <- get_sentiment(parlvote, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+amazon_sentiment_norm1 <- get_sentiment(amazon, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+finance_sentiment_norm1 <- get_sentiment(finance, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=FALSE)
+```
+
+### 3. Step (Optional): Convert Data into discrete format
+With this optional step, the data can be converted into a discrete format with the variables being 1 = positive, 0 = neutral, -1 = negative. 
+```{r}
+# Convert final values into discrete (1 = positive, 0 = neutral, -1 = negative) format for evaluation and comparison
+# 
+# Arg:
+#   df: input data frame that contains the columns to be converted into ternary format
+#   to_change: column names that should be converted into ternary format
+#   
+# Returns: 
+#   data frame with converted values
+
+get_discrete <- function(df, to_change){
+  df %>% 
+    mutate_at(to_change, function(x){
+      # mutate values greater than 0 to 1 (positive), equal to 0 to 0 (neutral) and smaller than 0 to -1 (negative)
+      case_when(x > 0 ~ 1, x < 0 ~ -1, x == 0 ~ 0)})# %>% 
+}
+
+# apply to data sets 
+reviews_discrete <- get_discrete(reviews_sentiment_norm1, c("afinn","vader","lsd"))
+twitter_discrete <- get_discrete(twitter_sentiment_norm1, c("afinn","vader","lsd"))
+parlvote_discrete <- get_discrete(parlvote_sentiment_norm1, c("afinn","vader","lsd"))
+amazon_discrete <- get_discrete(amazon_sentiment_norm1, c("afinn","vader","lsd"))
+finance_discrete <- get_discrete(finance_sentiment_norm1, c("afinn","vader","lsd"))
+```
+### 4. Step: Compute Coverage
+To compute the coverage of each sentiment lexicon and for each corpus, we consider all texts or tokens receiving a score of 0 to be non-recognized by the according lexicon (in `get_sentiment`, we set all *NA* values to 0, since we consider non-recognized sentences to be of neutral polarity), i.e. the word does not exist in the lexicon or the whole text did not contain a word which is contained in the lexicon. We compute the coverage per token and the coverage per text. In case of the coverage per token, we consider 2 configurations: 1) a baseline configuration with a simple token-count to compute the coverage score, 2) a configuration of the tokens with a prior stopword removal. 
+```{r}
+# get sentiment token-wise in corpus
+reviews_tok_sent <- get_sentiment(reviews, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=TRUE)
+twitter_tok_sent <- get_sentiment(twitter, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=TRUE)
+parlvote_tok_sent <- get_sentiment(parlvote, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=TRUE)
+amazon_tok_sent <- get_sentiment(amazon, c("afinn","lsd", "vader"), normalize="afinn", get_tokens=TRUE)
+finance_tok_sent <- get_sentiment(finance, c("afinn", "lsd", "vader"), normalize="afinn", get_tokens=TRUE)
+
+# load stopwords 
+data(stop_words)
+```
+
+```{r}
+# ===== COVERAGE PER TOKEN =====
+
+# Coverage per token: if sentiment score is not zero, count as "covered", get percentage of covered tokens
+reviews_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(reviews_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(reviews_tok_sent != 0)[[1]]*100,2))), "reviews tokens")
+twitter_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(twitter_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(twitter_tok_sent != 0)[[1]]*100,2))), "twitter tokens")
+parlvote_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(parlvote_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(parlvote_tok_sent != 0)[[1]]*100,2))), "parlvote tokens")
+amazon_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(amazon_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(amazon_tok_sent != 0)[[1]]*100,2))), "amazon tokens")
+finance_tok_coverage <- `rownames<-`(data.frame(t(round(colSums(finance_tok_sent[c("afinn","lsd","vader")] != 0)/colSums(finance_tok_sent != 0)[[1]]*100,2))), "finance tokens")
+
+# Coverage per token: with prior stopword removal 
+
+# remove stopwords from each data frame 
+reviews_tok.stopwords <- reviews_tok_sent %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+twitter_tok.stopwords <- twitter_tok_sent %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+parlvote_tok.stopwords <- parlvote_tok_sent %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+amazon_tok.stopwords <- amazon_tok_sent %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+finance_tok.stopwords <- finance_tok_sent %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+# same as above: if sentiment score is not zero, count as "covered", get percentage of covered tokens
+reviews_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(reviews_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(reviews_tok.stopwords != 0)[[1]]*100,2))), "reviews tokens (sw)")
+twitter_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(twitter_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(twitter_tok.stopwords != 0)[[1]]*100,2))), "twitter tokens (sw)")
+parlvote_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(parlvote_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(parlvote_tok.stopwords != 0)[[1]]*100,2))), "parlvote tokens (sw)")
+amazon_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(amazon_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(amazon_tok.stopwords != 0)[[1]]*100,2))), "amazon tokens (sw)")
+finance_tok_coverage.stopwords <- `rownames<-`(data.frame(t(round(colSums(finance_tok.stopwords[c("afinn","lsd","vader")] != 0)/colSums(finance_tok.stopwords != 0)[[1]]*100,2))), "finance tokens (sw)")
+
+# ===== COVERAGE PER TEXT =====
+
+# Coverage per text: if sentiment score is not zero, count as "covered", get percentage of covered text instances
+reviews_coverage <- `rownames<-`(data.frame(t(colSums(reviews_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "reviews text")
+twitter_coverage <- `rownames<-`(data.frame(t(colSums(twitter_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "twitter text")
+parlvote_coverage <- `rownames<-`(data.frame(t(colSums(parlvote_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "parlvote text")
+amazon_coverage <- `rownames<-`(data.frame(t(colSums(amazon_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "amazon text")
+finance_coverage <- `rownames<-`(data.frame(t(colSums(finance_sentiment_norm1[c("afinn","lsd","vader")] != 0)/10)), "finance text")
+
+# save data to data frame 
+coverage <- rbind(reviews_tok_coverage,reviews_tok_coverage.stopwords,reviews_coverage, twitter_tok_coverage,twitter_tok_coverage.stopwords,parlvote_tok_coverage,twitter_coverage,parlvote_tok_coverage.stopwords, parlvote_coverage, amazon_tok_coverage,amazon_tok_coverage.stopwords, amazon_coverage, finance_tok_coverage,finance_tok_coverage.stopwords, finance_coverage)
+```
+
+#### Display Coverage Results
+```{r}
+coverage
+```
+### 5. Step: Plot Data
+In the following part we will only create the plots of some example corpora.
+#### 5.1 Plot Sentiment Scores
+To get a first picture of the distribution of the sentiment scores, we will plot the reviews data as a bar plot and the parlvote corpus as a line plot. 
+```{r}
+# ===== PLOT SENTIMENT SCORES =====
+
+# create data frame with sentiment scores as variable of first 100 instances of corpus
+reviews_df <- melt(head(reviews_sentiment_norm1,100)[,c('id','afinn','lsd','vader')],id.vars = 1)
+parlvote_df <- melt(head(parlvote_sentiment_norm1,100)[,c('id','afinn','lsd','vader')],id.vars = 1)
+
+# create plots for each corpus
+reviews_plot <- ggplot(reviews_df,aes(x = id,y = value)) + 
+                geom_bar(aes(fill = variable),stat = "identity",position = "dodge") +
+                xlab("text id")+ ylab("sentiment score")+
+                ggtitle("Reviews Sentiment")
+
+parlvote_plot.line <- ggplot(parlvote_df,aes(x = id, y = value, group=variable)) +
+                      geom_line(aes(colour=variable), size=0.4)+ 
+                      ylim(-2,2) +
+                      xlab("text id")+ ylab("sentiment score")+
+                      ggtitle("ParlVote Sentiment Scores")
+
+# show plots
+reviews_plot
+parlvote_plot.line
+```
+#### 5.2 Plot Important Words
+To plot important words per sentiment, we use the sentiment score for each token (that we calculated for the coverage part) and convert continuous scores into a discrete format.
+```{r}
+# convert values to discrete format 
+reviews_tok_discrete <- get_discrete(reviews_tok_sent, c("afinn","vader","lsd"))
+```
+
+In the next step, word counts for each discrete (sentiment) variable ("positive", "negative", "neutral") are retrieved for each lexicon.
+```{r}
+# get word counts per discrete variable ("positive", "negative", "neutral", i.e. 1,-1,0)
+reviews_afinn.word_counts <- reviews_tok_discrete %>%
+   count(token, afinn, sort = TRUE) %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+reviews_lsd.word_counts <- reviews_tok_discrete %>%
+   count(token, lsd, sort = TRUE) %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+
+reviews_vader.word_counts <- reviews_tok_discrete %>%
+   count(token, vader, sort = TRUE) %>%
+   anti_join(stop_words, by= c("token" = "word") ) %>%
+   ungroup()
+```
+
+Now we can plot the top 20 words for each sentiment. Contribution to sentiment here is equal to the according word's frequency. 
+```{r}
+# plot top n words for each sentiment and for each lexicon, n = 20
+topn_reviews_afinn.plot <- reviews_afinn.word_counts %>%
+         group_by(afinn) %>%
+         slice(1:20) %>%
+         ggplot(aes(reorder(token, n), n, fill = afinn)) +
+           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+           facet_wrap(~afinn, scales = "free_y") +
+           labs(y = "contribution to sentiment", x = NULL) +
+           coord_flip()+
+           ggtitle("Reviews: Top 20 Words per Sentiment (Afinn)")
+ 
+topn_reviews_lsd.plot <- reviews_lsd.word_counts %>%
+         group_by(lsd) %>%
+         slice(1:20) %>%
+         ggplot(aes(reorder(token, n), n, fill = lsd)) +
+           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+           facet_wrap(~lsd, scales = "free_y") +
+           labs(y = "contribution to sentiment", x = NULL) +
+           coord_flip()+
+           ggtitle("Reviews: Top 20 Words per Sentiment (LSD)")
+ 
+topn_reviews_vader.plot <- reviews_vader.word_counts %>%
+         group_by(vader) %>%
+         slice(1:20) %>%
+         ggplot(aes(reorder(token, n), n, fill = vader)) +
+           geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+           facet_wrap(~vader, scales = "free_y") +
+           labs(y = "contribution to sentiment", x = NULL) +
+           coord_flip()+
+           ggtitle("Reviews: Top 20 Words per Sentiment (VADER)")
+
+topn_reviews_afinn.plot
+topn_reviews_lsd.plot
+topn_reviews_vader.plot
+```
+#### 5.3 Plot Coverage 
+In the next step, we plot the coverage of the sentiment lexicons.
+We will plot  
+- the coverage per token  
+- the coverage per token (with prior stopword removal)  
+- the coverage per text  
+```{r}
+# ===== PREPARE DATA FOR PLOTTING =====
+# create separate data frames we want to plot
+coverage_per_text <- rbind(reviews_coverage,twitter_coverage,parlvote_coverage,amazon_coverage,finance_coverage)
+coverage_per_tok <- rbind(reviews_tok_coverage,twitter_tok_coverage,parlvote_tok_coverage,amazon_tok_coverage, finance_tok_coverage)
+coverage_per_tok.stopwords <- rbind(reviews_tok_coverage.stopwords, twitter_tok_coverage.stopwords,parlvote_tok_coverage.stopwords,amazon_tok_coverage.stopwords,finance_tok_coverage.stopwords)
+
+# add corpus names as row names
+coverage_per_tok["corpus"] <- rownames(coverage_per_tok)
+coverage_per_tok.stopwords["corpus"] <- rownames(coverage_per_tok.stopwords)
+coverage_per_text["corpus"] <- rownames(coverage_per_text)
+
+# prepare data for plotting
+cov_tok_df <- melt(coverage_per_tok,id.vars = "corpus", value.name="coverage", variable.name="Lexicon")
+cov_tok_df.stopwords <- melt(coverage_per_tok.stopwords,id.vars = "corpus", value.name="coverage", variable.name="Lexicon")
+cov_text_df <- melt(coverage_per_text,id.vars = "corpus", value.name="coverage", variable.name="Lexicon")
+
+# ===== COVERAGE PLOTS =====
+# create plots
+cov_tok_plot <- ggplot(cov_tok_df,aes(x=corpus, y = coverage)) +
+                geom_bar(aes(fill = Lexicon),stat = "identity",position = "dodge", width= 0.7) +
+                xlab("Corpus")+ ylab("Coverage in %")+
+                ggtitle("Coverage per Token")
+
+cov_tok_plot.stopwords <- ggplot(cov_tok_df.stopwords,aes(x=corpus, y = coverage)) +
+                geom_bar(aes(fill = Lexicon),stat = "identity",position = "dodge", width= 0.7) +
+                xlab("Corpus")+ ylab("Coverage in %")+
+                ggtitle("Coverage per Token - Stopwords")
+
+cov_text_plot <- ggplot(cov_text_df,aes(x=corpus, y = coverage)) +
+                geom_bar(aes(fill = Lexicon),stat = "identity",position = "dodge", width= 0.7) +
+                xlab("Corpus")+ ylab("Coverage in %")+
+                ggtitle("Coverage per Text")
+
+# show plots
+cov_tok_plot
+cov_tok_plot.stopwords
+cov_text_plot
+```
+
+
