@@ -21,7 +21,7 @@ The data used for this project can be found within the `implementation/datasets`
 - Children's Book Reviews: https://sites.google.com/eng.ucsd.edu/ucsdbookgraph/home
 - Finance News: https://www.kaggle.com/ankurzing/sentiment-analysis-for-financial-news
 
-### Folder Results
+### Results
 This folder contains all results obtained through our evaluation and the rating scores from the lexica. 
 
 - coverage: These files contain tables showing the coverage of.... They can be obtained running the sentiment_tools notebook.
