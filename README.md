@@ -24,11 +24,11 @@ The data used for this project can be found within the `implementation/datasets`
 ### Results
 This folder contains all results obtained through our evaluation and the rating scores from the lexica. 
 
-- coverage: These files contain tables showing the coverage of the sentiment tools on the data sets. They can be obtained running the sentiment_tools notebook.
-- results test configurations: The folder contains the accuracy and F1 scores of the different test conditions we tried. For further details about the test conditions please check section 6.3 of our report.
-- sentiment_scores: This folder has files containing the results of the lexicons for the different test conditions. These results can be obtained by running the sentiment_tools script. Files including the notation `norm` contain scores calculated with the regular min-max normalization. Files including the notation `norm1` are calculated using the customized min-max normalization function. 
-- Similarity Comparisons Table: These csv files hold tables which show the examples of each corpus sorted by how similarly they were rated by the lexicons. They include the individual scores given by the lexicons and a similarity rating computed through absolute distance between the ratings. These results can be replicated through the notebook Similarity found in the Evaluation folder.
-- word_counts: This folder contains lists of the most common positive, negative, and neutral words for each corpus and each lexicon. These results can be obtained by running the sentiment_tools script.
+- `coverage`: These files contain tables showing the coverage of the sentiment tools on the data sets. They can be obtained running the sentiment_tools notebook.
+- `results test configurations`: The folder contains the accuracy and F1 scores of the different test conditions we tried. For further details about the test conditions please check section 6.3 of our report.
+- `sentiment_scores`: This folder has files containing the results of the lexicons for the different test conditions. These results can be obtained by running the sentiment_tools script. Files including the notation `norm` contain scores calculated with the regular min-max normalization. Files including the notation `norm1` are calculated using the customized min-max normalization function. 
+- `similarity comparison tables`: These csv files hold tables which show the examples of each corpus sorted by how similarly they were rated by the lexicons. They include the individual scores given by the lexicons and a similarity rating computed through absolute distance between the ratings. These results can be replicated through the notebook Similarity found in the Evaluation folder.
+- `word_counts`: This folder contains lists of the most common positive, negative, and neutral words for each corpus and each lexicon. These results can be obtained by running the sentiment_tools script.
 
 ### How to run:
 We recommend running the notebooks using RStudio. The following libraries are required: 
