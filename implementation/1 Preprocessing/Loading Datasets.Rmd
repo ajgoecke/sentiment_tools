@@ -10,7 +10,7 @@ library(dplyr)
 
 ParlVote Corpus
 ```{r}
-#Load ParlVote Data Set
+#Load Data Set from local directory
 #https://data.mendeley.com/datasets/czjfwgs9tm/1
 
 ParlVote_concat <- read.csv("~/Studium/3 Semester/PM/Corpora/ParlVote_concat.csv")
@@ -57,7 +57,7 @@ red_parl_vote<-red_parl_vote[,c(3,1,2)]
 Book Review Corpus
 
 ```{r}
-#Load Corpus
+#Load Data Set from local directory
 #https://sites.google.com/eng.ucsd.edu/ucsdbookgraph/home
 
 setwd("/Users/rike-/Documents/Studium/3 Semester/PM/Corpora")
@@ -119,7 +119,7 @@ red_review%>%
 
 Twitter Corpus
 ```{r}
-#load corpus
+#Load Data Set from local directory
 #https://www.kaggle.com/crowdflower/first-gop-debate-twitter-sentiment
 
 twitter <- read.csv("~/Studium/3 Semester/PM/Corpora/Sentiment.csv", comment.char="#")
@@ -213,7 +213,7 @@ red_twit<-red_twit[,c(3,1,2)]
 
 Amazon Product Reviews
 ```{r}
-#Load partial Corpus 
+#Load Data Set from local directory
 #https://cseweb.ucsd.edu/~jmcauley/datasets.html#amazon_reviews
 
 ama <- read.csv("C:/Users/rike-/Desktop/Industrial_and_Scientific.json.gz", header=FALSE,nrows=90000)
@@ -279,6 +279,7 @@ red_ama%>%
 
 Finance
 ```{r}
+#Load Data Set from local directory
 #https://www.kaggle.com/ankurzing/sentiment-analysis-for-financial-news
 finance <- read.csv("~/Studium/3 Semester/PM/Corpora/archive/all-data.csv")
 ```

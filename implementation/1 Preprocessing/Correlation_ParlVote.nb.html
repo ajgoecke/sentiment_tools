@@ -1750,50 +1750,85 @@ pre code {
 <p>The Notebook calculates the correlation between the Party Affiliation of the speaker and the Party bringing the motion in the ParlVote Corpus and compares this to the correlation between the predicted values of the lexica and the gold labels</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI2xpYnJhcnkocmVhZHRleHQpXG4jbGlicmFyeShyanNvbilcbiNsaWJyYXJ5KGpzb25saXRlKVxubGlicmFyeShkcGx5cilcbmBgYCJ9 -->
-<pre class="r"><code>#library(readtext)
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuI2xpYnJhcnkocmVhZHRleHQpXG4jbGlicmFyeShyanNvbilcbiNsaWJyYXJ5KGpzb25saXRlKVxubGlicmFyeShkcGx5cilcbmBgYFxuYGBgIn0= -->
+<pre class="r"><code>```r
+#library(readtext)
 #library(rjson)
 #library(jsonlite)
 library(dplyr)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiUGFrZXQg46S847ixZHBseXLjpLzjuLIgd3VyZGUgdW50ZXIgUiBWZXJzaW9uIDQuMC41IGVyc3RlbGx0XG5BdHRhY2hlIFBha2V0OiDjpLzjuLFkcGx5cuOkvOO4slxuXG5UaGUgZm9sbG93aW5nIG9iamVjdHMgYXJlIG1hc2tlZCBmcm9tIOOkvOO4sXBhY2thZ2U6c3RhdHPjpLzjuLI6XG5cbiAgICBmaWx0ZXIsIGxhZ1xuXG5UaGUgZm9sbG93aW5nIG9iamVjdHMgYXJlIG1hc2tlZCBmcm9tIOOkvOO4sXBhY2thZ2U6YmFzZeOkvOO4sjpcblxuICAgIGludGVyc2VjdCwgc2V0ZGlmZiwgc2V0ZXF1YWwsIHVuaW9uXG4ifQ== -->
-<pre><code>Paket 㤼㸱dplyr㤼㸲 wurde unter R Version 4.0.5 erstellt
-Attache Paket: 㤼㸱dplyr㤼㸲
+<pre><code>
+&lt;!-- rnb-source-end --&gt;
 
-The following objects are masked from 㤼㸱package:stats㤼㸲:
+&lt;!-- rnb-output-begin eyJkYXRhIjoiUGFrZXQgw6PCpMK8w6PCuMKxZHBseXLDo8KkwrzDo8K4wrIgd3VyZGUgdW50ZXIgUiBWZXJzaW9uIDQuMC41IGVyc3RlbGx0XG5BdHRhY2hlIFBha2V0OiDDo8KkwrzDo8K4wrFkcGx5csOjwqTCvMOjwrjCslxuXG5UaGUgZm9sbG93aW5nIG9iamVjdHMgYXJlIG1hc2tlZCBmcm9tIMOjwqTCvMOjwrjCsXBhY2thZ2U6c3RhdHPDo8KkwrzDo8K4wrI6XG5cbiAgICBmaWx0ZXIsIGxhZ1xuXG5UaGUgZm9sbG93aW5nIG9iamVjdHMgYXJlIG1hc2tlZCBmcm9tIMOjwqTCvMOjwrjCsXBhY2thZ2U6YmFzZcOjwqTCvMOjwrjCsjpcblxuICAgIGludGVyc2VjdCwgc2V0ZGlmZiwgc2V0ZXF1YWwsIHVuaW9uXG4ifQ== --&gt;
+</code></pre>
+<p>Paket ã¤¼ã¸±dplyrã¤¼ã¸² wurde unter R Version 4.0.5 erstellt Attache Paket: ã¤¼ã¸±dplyrã¤¼ã¸²</p>
+<p>The following objects are masked from ã¤¼ã¸±package:statsã¤¼ã¸²:</p>
+<pre><code>filter, lag</code></pre>
+<p>The following objects are masked from ã¤¼ã¸±package:baseã¤¼ã¸²:</p>
+<pre><code>intersect, setdiff, setequal, union</code></pre>
+<pre><code>
 
-    filter, lag
 
-The following objects are masked from 㤼㸱package:base㤼㸲:
+&lt;!-- rnb-output-end --&gt;
 
-    intersect, setdiff, setequal, union</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI2xpYnJhcnkodGlkeXZlcnNlKVxuI2xpYnJhcnkocXVhbnRlZGEpXG5gYGAifQ== -->
-<pre class="r"><code>#library(tidyverse)
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuI2xpYnJhcnkodGlkeXZlcnNlKVxuI2xpYnJhcnkocXVhbnRlZGEpXG5gYGBcbmBgYCJ9 --&gt;
+
+```r
+```r
+#library(tidyverse)
 #library(quanteda)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Make a Corpus which includes the party affiliation.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuUGFybFZvdGVfY29uY2F0IDwtIHJlYWQuY3N2KFwifi9TdHVkaXVtLzMgU2VtZXN0ZXIvUE0vQ29ycG9yYS9QYXJsVm90ZV9jb25jYXQuY3N2XCIpXG5gYGAifQ== -->
-<pre class="r"><code>ParlVote_concat &lt;- read.csv(&quot;~/Studium/3 Semester/PM/Corpora/ParlVote_concat.csv&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI29ubHkgdXNlIHJlbGV2YW50IGNvbHVtbnMgYW5kIHRocm93IG91dCBlbnRyaWVzIHdpdGggbm9uIGFzY2lpIGNoYXJhY3RlcnNcbnBhcmxfdm90ZTwtIHN1YnNldChQYXJsVm90ZV9jb25jYXQsIHNlbGVjdCA9IGMoXCJtb3Rpb25fcGFydHlcIixcInBhcnR5XCIsXCJzcGVlY2hcIixcInZvdGVcIikpXG5cbnBhcmxfdm90ZSA8LXBhcmxfdm90ZVt3aGljaCghZ3JlcGwoXCJbXlxceDAxLVxceDdGXStcIixwYXJsX3ZvdGUkc3BlZWNoKSksXVxuXG4jT25seSBjaG9vc2UgdGhlIHR3byBiaWdnZXN0IHBhcnRpZXMgdG8gbWFrZSBjb21wYXJpc29uIGVhc2llclxucGFybF92b3RlPC1zdWJzZXQocGFybF92b3RlLCBtb3Rpb25fcGFydHk9PSdsYWJvdXInfG1vdGlvbl9wYXJ0eT09XCJjb25zZXJ2YXRpdmVcIilcblxucGFybF92b3RlPC1zdWJzZXQocGFybF92b3RlLCBwYXJ0eT09J2xhYm91cid8cGFydHk9PVwiY29uc2VydmF0aXZlXCIpXG5cblxuI1JlbmFtZSBjb2x1bW5zIHRvIHN0YW5kYXJkIGNvbHVtbiBuYW1lXG5wYXJsX3ZvdGU8LXBhcmxfdm90ZSAlPiUgXG4gcmVuYW1lKFxuICAgIHRleHQgPSBzcGVlY2gsXG4gICAgcmF0aW5nID0gdm90ZSlcblxuI2NoYW5nZSB0aGUgbmVnYXRpdmUgcmF0aWduIHRvIC0xIHRvIGJlIGNvbnNpc3RlbnQgXG5wYXJsX3ZvdGUkcmF0aW5nW3Bhcmxfdm90ZSRyYXRpbmcgPT0gMF0gPC0gLTFcblxuXG4jc2FtcGxlIDUwMCBwb3NpdGl2ZSBhbmQgbmVnYXRpdmUgZXhhbXBsZXNcbnJlZF9wYXJsX3ZvdGUgPC0gZGF0YS5mcmFtZSh0ZXh0PWNoYXJhY3RlcigpLFxuICAgICAgICAgICAgICAgICByYXRpbmc9aW50ZWdlcigpLCBcbiAgICAgICAgICAgICAgICAgc3RyaW5nc0FzRmFjdG9ycz1GQUxTRSkgXG5cbmhvbGQ8LSBzdWJzZXQocGFybF92b3RlLCByYXRpbmcgPT0gLTEpXG5cbnJlZF9wYXJsX3ZvdGUgPC0gcmJpbmQocmVkX3Bhcmxfdm90ZSwgaG9sZFtzYW1wbGUobnJvdyhob2xkKSwgNTAwKSwgXSlcblxuaG9sZDwtIHN1YnNldChwYXJsX3ZvdGUsIHJhdGluZyA9PSAxKVxuXG5yZWRfcGFybF92b3RlIDwtIHJiaW5kKHJlZF9wYXJsX3ZvdGUsIGhvbGRbc2FtcGxlKG5yb3coaG9sZCksIDUwMCksIF0pXG5cblxuI2FkZCBJRCBjb2x1bW5cbnJlZF9wYXJsX3ZvdGUkaWQgPC0gMTpucm93KHJlZF9wYXJsX3ZvdGUpIFxucmVkX3Bhcmxfdm90ZTwtcmVkX3Bhcmxfdm90ZVssYyg1LDEsMiwzLDQpXVxuXG5gYGAifQ== -->
-<pre class="r"><code>#only use relevant columns and throw out entries with non ascii characters
-parl_vote&lt;- subset(ParlVote_concat, select = c(&quot;motion_party&quot;,&quot;party&quot;,&quot;speech&quot;,&quot;vote&quot;))
+<pre><code>
+&lt;!-- rnb-source-end --&gt;
 
-parl_vote &lt;-parl_vote[which(!grepl(&quot;[^\x01-\x7F]+&quot;,parl_vote$speech)),]
+&lt;!-- rnb-chunk-end --&gt;
+
+
+&lt;!-- rnb-text-begin --&gt;
+
+
+
+Make a Corpus which includes the party affiliation. 
+
+&lt;!-- rnb-text-end --&gt;
+
+
+&lt;!-- rnb-chunk-begin --&gt;
+
+
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuUGFybFZvdGVfY29uY2F0IDwtIHJlYWQuY3N2KFxcfi9TdHVkaXVtLzMgU2VtZXN0ZXIvUE0vQ29ycG9yYS9QYXJsVm90ZV9jb25jYXQuY3N2XFwpXG5gYGBcbmBgYCJ9 --&gt;
+
+```r
+```r
+ParlVote_concat &lt;- read.csv(\~/Studium/3 Semester/PM/Corpora/ParlVote_concat.csv\)</code></pre>
+<pre><code>
+&lt;!-- rnb-source-end --&gt;
+
+&lt;!-- rnb-chunk-end --&gt;
+
+
+&lt;!-- rnb-text-begin --&gt;
+
+
+
+&lt;!-- rnb-text-end --&gt;
+
+
+&lt;!-- rnb-chunk-begin --&gt;
+
+
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuI29ubHkgdXNlIHJlbGV2YW50IGNvbHVtbnMgYW5kIHRocm93IG91dCBlbnRyaWVzIHdpdGggbm9uIGFzY2lpIGNoYXJhY3RlcnNcbnBhcmxfdm90ZTwtIHN1YnNldChQYXJsVm90ZV9jb25jYXQsIHNlbGVjdCA9IGMoXFxtb3Rpb25fcGFydHlcXCxcXHBhcnR5XFwsXFxzcGVlY2hcXCxcXHZvdGVcXCkpXG5cbnBhcmxfdm90ZSA8LXBhcmxfdm90ZVt3aGljaCghZ3JlcGwoXFxbXlxceDAxLVxceDdGXStcXCxwYXJsX3ZvdGUkc3BlZWNoKSksXVxuXG4jT25seSBjaG9vc2UgdGhlIHR3byBiaWdnZXN0IHBhcnRpZXMgdG8gbWFrZSBjb21wYXJpc29uIGVhc2llclxucGFybF92b3RlPC1zdWJzZXQocGFybF92b3RlLCBtb3Rpb25fcGFydHk9PSdsYWJvdXInfG1vdGlvbl9wYXJ0eT09XFxjb25zZXJ2YXRpdmVcXClcblxucGFybF92b3RlPC1zdWJzZXQocGFybF92b3RlLCBwYXJ0eT09J2xhYm91cid8cGFydHk9PVxcY29uc2VydmF0aXZlXFwpXG5cblxuI1JlbmFtZSBjb2x1bW5zIHRvIHN0YW5kYXJkIGNvbHVtbiBuYW1lXG5wYXJsX3ZvdGU8LXBhcmxfdm90ZSAlPiUgXG4gcmVuYW1lKFxuICAgIHRleHQgPSBzcGVlY2gsXG4gICAgcmF0aW5nID0gdm90ZSlcblxuI2NoYW5nZSB0aGUgbmVnYXRpdmUgcmF0aWduIHRvIC0xIHRvIGJlIGNvbnNpc3RlbnQgXG5wYXJsX3ZvdGUkcmF0aW5nW3Bhcmxfdm90ZSRyYXRpbmcgPT0gMF0gPC0gLTFcblxuXG4jc2FtcGxlIDUwMCBwb3NpdGl2ZSBhbmQgbmVnYXRpdmUgZXhhbXBsZXNcbnJlZF9wYXJsX3ZvdGUgPC0gZGF0YS5mcmFtZSh0ZXh0PWNoYXJhY3RlcigpLFxuICAgICAgICAgICAgICAgICByYXRpbmc9aW50ZWdlcigpLCBcbiAgICAgICAgICAgICAgICAgc3RyaW5nc0FzRmFjdG9ycz1GQUxTRSkgXG5cbmhvbGQ8LSBzdWJzZXQocGFybF92b3RlLCByYXRpbmcgPT0gLTEpXG5cbnJlZF9wYXJsX3ZvdGUgPC0gcmJpbmQocmVkX3Bhcmxfdm90ZSwgaG9sZFtzYW1wbGUobnJvdyhob2xkKSwgNTAwKSwgXSlcblxuaG9sZDwtIHN1YnNldChwYXJsX3ZvdGUsIHJhdGluZyA9PSAxKVxuXG5yZWRfcGFybF92b3RlIDwtIHJiaW5kKHJlZF9wYXJsX3ZvdGUsIGhvbGRbc2FtcGxlKG5yb3coaG9sZCksIDUwMCksIF0pXG5cblxuI2FkZCBJRCBjb2x1bW5cbnJlZF9wYXJsX3ZvdGUkaWQgPC0gMTpucm93KHJlZF9wYXJsX3ZvdGUpIFxucmVkX3Bhcmxfdm90ZTwtcmVkX3Bhcmxfdm90ZVssYyg1LDEsMiwzLDQpXVxuXG5gYGBcbmBgYCJ9 --&gt;
+
+```r
+```r
+#only use relevant columns and throw out entries with non ascii characters
+parl_vote&lt;- subset(ParlVote_concat, select = c(\motion_party\,\party\,\speech\,\vote\))
+
+parl_vote &lt;-parl_vote[which(!grepl(\[^\x01-\x7F]+\,parl_vote$speech)),]
 
 #Only choose the two biggest parties to make comparison easier
-parl_vote&lt;-subset(parl_vote, motion_party==&#39;labour&#39;|motion_party==&quot;conservative&quot;)
+parl_vote&lt;-subset(parl_vote, motion_party==&#39;labour&#39;|motion_party==\conservative\)
 
-parl_vote&lt;-subset(parl_vote, party==&#39;labour&#39;|party==&quot;conservative&quot;)
+parl_vote&lt;-subset(parl_vote, party==&#39;labour&#39;|party==\conservative\)
 
 
 #Rename columns to standard column name
@@ -1824,48 +1859,92 @@ red_parl_vote &lt;- rbind(red_parl_vote, hold[sample(nrow(hold), 500), ])
 red_parl_vote$id &lt;- 1:nrow(red_parl_vote) 
 red_parl_vote&lt;-red_parl_vote[,c(5,1,2,3,4)]
 </code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI3NhdmUgaWYgbmVlZGVkXG4jc2F2ZVJEUyhyZWRfcGFybF92b3RlLCBmaWxlID0gXCJjb3JyX3BhcnQucmRzXCIpXG5gYGAifQ== -->
-<pre class="r"><code>#save if needed
-#saveRDS(red_parl_vote, file = &quot;corr_part.rds&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Results of this corpus</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGFybF9yZXM8LSByZWFkLmNzdihcIn4vU3R1ZGl1bS8zIFNlbWVzdGVyL1BNL0RhdGFzZXRzL3Bhcmx2b3RlX2NvcnJfbm9ybTEuY3N2XCIpXG5gYGAifQ== -->
-<pre class="r"><code>parl_res&lt;- read.csv(&quot;~/Studium/3 Semester/PM/Datasets/parlvote_corr_norm1.csv&quot;)</code></pre>
+<pre><code>
+&lt;!-- rnb-source-end --&gt;
+
+&lt;!-- rnb-chunk-end --&gt;
+
+
+&lt;!-- rnb-text-begin --&gt;
+
+
+
+&lt;!-- rnb-text-end --&gt;
+
+
+&lt;!-- rnb-chunk-begin --&gt;
+
+
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuI3NhdmUgaWYgbmVlZGVkXG4jc2F2ZVJEUyhyZWRfcGFybF92b3RlLCBmaWxlID0gXFxjb3JyX3BhcnQucmRzXFwpXG5gYGBcbmBgYCJ9 --&gt;
+
+```r
+```r
+#save if needed
+#saveRDS(red_parl_vote, file = \corr_part.rds\)</code></pre>
+<pre><code>
+&lt;!-- rnb-source-end --&gt;
+
+&lt;!-- rnb-chunk-end --&gt;
+
+
+&lt;!-- rnb-text-begin --&gt;
+
+
+
+Results of this corpus
+
+&lt;!-- rnb-text-end --&gt;
+
+
+&lt;!-- rnb-chunk-begin --&gt;
+
+
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGFybF9yZXM8LSByZWFkLmNzdihcIi4uL3Jlc3VsdHMvc2VudGltZW50X3Njb3Jlcy9wYXJsdm90ZV9jb3JyX25vcm0xLmNzdlwiKVxuYGBgIn0= --&gt;
+
+```r
+parl_res&lt;- read.csv(&quot;../results/sentiment_scores/parlvote_corr_norm1.csv&quot;)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p>Correlation between party and gold label</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG5jb3JyX3BhcnQ8LXBhcmxfcmVzW2MoXCJtb3Rpb25fcGFydHlcIixcInBhcnR5XCIsXCJyYXRpbmdcIildXG5cbiNDaGVjayBpZiB0aGUgc3BlYWtlciBiZWxvbmdzIHRvIHRoZSBwYXJ0eSB0aGF0IGJyb3VnaHQgdXAgdGhlIG1vdGlvblxuZXF1PC1jb3JyX3BhcnQkbW90aW9uX3BhcnR5PT1jb3JyX3BhcnQkcGFydHlcbmNvcnJfcGFydCRlcXVhbGl0eT1lcXVcblxuXG5jb21wPC1jb3JyX3BhcnRbYyhcInJhdGluZ1wiLFwiZXF1YWxpdHlcIildXG5cbnBhcnR5X3NlbnRpbWVudF9jb3JyPC1jb3IoY29tcCRyYXRpbmcsIGNvbXAkZXF1YWxpdHksIG1ldGhvZCA9IGMoXCJwZWFyc29uXCIpLCBcbiAgICB1c2UgPSBcImNvbXBsZXRlLm9ic1wiKVxuYGBgIn0= -->
-<pre class="r"><code>
-corr_part&lt;-parl_res[c(&quot;motion_party&quot;,&quot;party&quot;,&quot;rating&quot;)]
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuXG5jb3JyX3BhcnQ8LXBhcmxfcmVzW2MoXFxtb3Rpb25fcGFydHlcXCxcXHBhcnR5XFwsXFxyYXRpbmdcXCldXG5cbiNDaGVjayBpZiB0aGUgc3BlYWtlciBiZWxvbmdzIHRvIHRoZSBwYXJ0eSB0aGF0IGJyb3VnaHQgdXAgdGhlIG1vdGlvblxuZXF1PC1jb3JyX3BhcnQkbW90aW9uX3BhcnR5PT1jb3JyX3BhcnQkcGFydHlcbmNvcnJfcGFydCRlcXVhbGl0eT1lcXVcblxuXG5jb21wPC1jb3JyX3BhcnRbYyhcXHJhdGluZ1xcLFxcZXF1YWxpdHlcXCldXG5cbnBhcnR5X3NlbnRpbWVudF9jb3JyPC1jb3IoY29tcCRyYXRpbmcsIGNvbXAkZXF1YWxpdHksIG1ldGhvZCA9IGMoXFxwZWFyc29uXFwpLCBcbiAgICB1c2UgPSBcXGNvbXBsZXRlLm9ic1xcKVxuYGBgXG5gYGAifQ== -->
+<pre class="r"><code>```r
+
+corr_part&lt;-parl_res[c(\motion_party\,\party\,\rating\)]
 
 #Check if the speaker belongs to the party that brought up the motion
 equ&lt;-corr_part$motion_party==corr_part$party
 corr_part$equality=equ
 
 
-comp&lt;-corr_part[c(&quot;rating&quot;,&quot;equality&quot;)]
+comp&lt;-corr_part[c(\rating\,\equality\)]
 
-party_sentiment_corr&lt;-cor(comp$rating, comp$equality, method = c(&quot;pearson&quot;), 
-    use = &quot;complete.obs&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGV4X2NvcnI8LXBhcmxfcmVzW2MoXCJsc2RcIixcImFmaW5uXCIsXCJ2YWRlclwiKV1cblxuI25vcm1hbGlzZSB0aGUgcmF0aW5ncyB0byBwb3NpdGl2ZSBvciBuZWdhdGl2ZVxubGV4X2NvcnJbbGV4X2NvcnI+MF0gPC0gMVxubGV4X2NvcnJbbGV4X2NvcnI8PTBdIDwtIC0xXG4gXG4jQ2hvb3NlIG9uZSByYXRpbmcgZm9yIGVhY2ggZW50cnkgcGVyIG1ham9yaXR5IHZvdGUgXG5sZXhfY29yciRzdW1zPXJvd1N1bXMobGV4X2NvcnIpXG5cbmxleF9jb3JyW2xleF9jb3JyPjBdIDwtIDFcbmxleF9jb3JyW2xleF9jb3JyPD0wXSA8LSAtMVxuXG5cbmxleGljb25fc2VudGltZW50X2NvcnI8LWNvcihwYXJsX3JlcyRyYXRpbmcsIGxleF9jb3JyJHN1bXMsIG1ldGhvZCA9IGMoXCJwZWFyc29uXCIpLCBcbiAgICB1c2UgPSBcImNvbXBsZXRlLm9ic1wiKVxuXG5gYGAifQ== -->
-<pre class="r"><code>lex_corr&lt;-parl_res[c(&quot;lsd&quot;,&quot;afinn&quot;,&quot;vader&quot;)]
+party_sentiment_corr&lt;-cor(comp$rating, comp$equality, method = c(\pearson\), 
+    use = \complete.obs\)</code></pre>
+<pre><code>
+&lt;!-- rnb-source-end --&gt;
+
+&lt;!-- rnb-chunk-end --&gt;
+
+
+&lt;!-- rnb-text-begin --&gt;
+
+
+
+
+&lt;!-- rnb-text-end --&gt;
+
+
+&lt;!-- rnb-chunk-begin --&gt;
+
+
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxubGV4X2NvcnI8LXBhcmxfcmVzW2MoXFxsc2RcXCxcXGFmaW5uXFwsXFx2YWRlclxcKV1cblxuI25vcm1hbGlzZSB0aGUgcmF0aW5ncyB0byBwb3NpdGl2ZSBvciBuZWdhdGl2ZVxubGV4X2NvcnJbbGV4X2NvcnI+MF0gPC0gMVxubGV4X2NvcnJbbGV4X2NvcnI8PTBdIDwtIC0xXG4gXG4jQ2hvb3NlIG9uZSByYXRpbmcgZm9yIGVhY2ggZW50cnkgcGVyIG1ham9yaXR5IHZvdGUgXG5sZXhfY29yciRzdW1zPXJvd1N1bXMobGV4X2NvcnIpXG5cbmxleF9jb3JyW2xleF9jb3JyPjBdIDwtIDFcbmxleF9jb3JyW2xleF9jb3JyPD0wXSA8LSAtMVxuXG5cbmxleGljb25fc2VudGltZW50X2NvcnI8LWNvcihwYXJsX3JlcyRyYXRpbmcsIGxleF9jb3JyJHN1bXMsIG1ldGhvZCA9IGMoXFxwZWFyc29uXFwpLCBcbiAgICB1c2UgPSBcXGNvbXBsZXRlLm9ic1xcKVxuXG5gYGBcbmBgYCJ9 --&gt;
+
+```r
+```r
+lex_corr&lt;-parl_res[c(\lsd\,\afinn\,\vader\)]
 
 #normalise the ratings to positive or negative
 lex_corr[lex_corr&gt;0] &lt;- 1
@@ -1878,13 +1957,14 @@ lex_corr[lex_corr&gt;0] &lt;- 1
 lex_corr[lex_corr&lt;=0] &lt;- -1
 
 
-lexicon_sentiment_corr&lt;-cor(parl_res$rating, lex_corr$sums, method = c(&quot;pearson&quot;), 
-    use = &quot;complete.obs&quot;)
+lexicon_sentiment_corr&lt;-cor(parl_res$rating, lex_corr$sums, method = c(\pearson\), 
+    use = \complete.obs\)
 </code></pre>
+<p>```</p>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIkNvcnJlbGF0aW9uIFBhcmxWb3RlIg0Kb3V0cHV0OiBodG1sX25vdGVib29rDQotLS0NClRoZSBOb3RlYm9vayBjYWxjdWxhdGVzIHRoZSBjb3JyZWxhdGlvbiBiZXR3ZWVuIHRoZSBQYXJ0eSBBZmZpbGlhdGlvbiBvZiB0aGUgc3BlYWtlciBhbmQgdGhlIFBhcnR5IGJyaW5naW5nIHRoZSBtb3Rpb24gaW4gdGhlIFBhcmxWb3RlIENvcnB1cyBhbmQgY29tcGFyZXMgdGhpcyB0byB0aGUgY29ycmVsYXRpb24gYmV0d2VlbiB0aGUgcHJlZGljdGVkIHZhbHVlcyBvZiB0aGUgbGV4aWNhIGFuZCB0aGUgZ29sZCBsYWJlbHMNCmBgYHtyfQ0KbGlicmFyeShkcGx5cikNCmBgYA0KDQoNCk1ha2UgYSBDb3JwdXMgd2hpY2ggaW5jbHVkZXMgdGhlIHBhcnR5IGFmZmlsaWF0aW9uLiANCmBgYHtyfQ0KUGFybFZvdGVfY29uY2F0IDwtIHJlYWQuY3N2KCJ+L1N0dWRpdW0vMyBTZW1lc3Rlci9QTS9Db3Jwb3JhL1BhcmxWb3RlX2NvbmNhdC5jc3YiKQ0KYGBgDQoNCmBgYHtyfQ0KI29ubHkgdXNlIHJlbGV2YW50IGNvbHVtbnMgYW5kIHRocm93IG91dCBlbnRyaWVzIHdpdGggbm9uIGFzY2lpIGNoYXJhY3RlcnMNCnBhcmxfdm90ZTwtIHN1YnNldChQYXJsVm90ZV9jb25jYXQsIHNlbGVjdCA9IGMoIm1vdGlvbl9wYXJ0eSIsInBhcnR5Iiwic3BlZWNoIiwidm90ZSIpKQ0KDQpwYXJsX3ZvdGUgPC1wYXJsX3ZvdGVbd2hpY2goIWdyZXBsKCJbXlx4MDEtXHg3Rl0rIixwYXJsX3ZvdGUkc3BlZWNoKSksXQ0KDQojT25seSBjaG9vc2UgdGhlIHR3byBiaWdnZXN0IHBhcnRpZXMgdG8gbWFrZSBjb21wYXJpc29uIGVhc2llcg0KcGFybF92b3RlPC1zdWJzZXQocGFybF92b3RlLCBtb3Rpb25fcGFydHk9PSdsYWJvdXInfG1vdGlvbl9wYXJ0eT09ImNvbnNlcnZhdGl2ZSIpDQoNCnBhcmxfdm90ZTwtc3Vic2V0KHBhcmxfdm90ZSwgcGFydHk9PSdsYWJvdXInfHBhcnR5PT0iY29uc2VydmF0aXZlIikNCg0KDQojUmVuYW1lIGNvbHVtbnMgdG8gc3RhbmRhcmQgY29sdW1uIG5hbWUNCnBhcmxfdm90ZTwtcGFybF92b3RlICU+JSANCiByZW5hbWUoDQogICAgdGV4dCA9IHNwZWVjaCwNCiAgICByYXRpbmcgPSB2b3RlKQ0KDQojY2hhbmdlIHRoZSBuZWdhdGl2ZSByYXRpZ24gdG8gLTEgdG8gYmUgY29uc2lzdGVudCANCnBhcmxfdm90ZSRyYXRpbmdbcGFybF92b3RlJHJhdGluZyA9PSAwXSA8LSAtMQ0KDQoNCiNzYW1wbGUgNTAwIHBvc2l0aXZlIGFuZCBuZWdhdGl2ZSBleGFtcGxlcw0KcmVkX3Bhcmxfdm90ZSA8LSBkYXRhLmZyYW1lKHRleHQ9Y2hhcmFjdGVyKCksDQogICAgICAgICAgICAgICAgIHJhdGluZz1pbnRlZ2VyKCksIA0KICAgICAgICAgICAgICAgICBzdHJpbmdzQXNGYWN0b3JzPUZBTFNFKSANCg0KaG9sZDwtIHN1YnNldChwYXJsX3ZvdGUsIHJhdGluZyA9PSAtMSkNCg0KcmVkX3Bhcmxfdm90ZSA8LSByYmluZChyZWRfcGFybF92b3RlLCBob2xkW3NhbXBsZShucm93KGhvbGQpLCA1MDApLCBdKQ0KDQpob2xkPC0gc3Vic2V0KHBhcmxfdm90ZSwgcmF0aW5nID09IDEpDQoNCnJlZF9wYXJsX3ZvdGUgPC0gcmJpbmQocmVkX3Bhcmxfdm90ZSwgaG9sZFtzYW1wbGUobnJvdyhob2xkKSwgNTAwKSwgXSkNCg0KDQojYWRkIElEIGNvbHVtbg0KcmVkX3Bhcmxfdm90ZSRpZCA8LSAxOm5yb3cocmVkX3Bhcmxfdm90ZSkgDQpyZWRfcGFybF92b3RlPC1yZWRfcGFybF92b3RlWyxjKDUsMSwyLDMsNCldDQoNCmBgYA0KDQpgYGB7cn0NCiNzYXZlIGlmIG5lZWRlZA0KI3NhdmVSRFMocmVkX3Bhcmxfdm90ZSwgZmlsZSA9ICJjb3JyX3BhcnQucmRzIikNCmBgYA0KDQoNClJlc3VsdHMgb2YgdGhpcyBjb3JwdXMNCmBgYHtyfQ0KcGFybF9yZXM8LSByZWFkLmNzdigifi9TdHVkaXVtLzMgU2VtZXN0ZXIvUE0vRGF0YXNldHMvcGFybHZvdGVfY29ycl9ub3JtMS5jc3YiKQ0KYGBgDQoNCkNvcnJlbGF0aW9uIGJldHdlZW4gcGFydHkgYW5kIGdvbGQgbGFiZWwNCmBgYHtyfQ0KDQpjb3JyX3BhcnQ8LXBhcmxfcmVzW2MoIm1vdGlvbl9wYXJ0eSIsInBhcnR5IiwicmF0aW5nIildDQoNCiNDaGVjayBpZiB0aGUgc3BlYWtlciBiZWxvbmdzIHRvIHRoZSBwYXJ0eSB0aGF0IGJyb3VnaHQgdXAgdGhlIG1vdGlvbg0KZXF1PC1jb3JyX3BhcnQkbW90aW9uX3BhcnR5PT1jb3JyX3BhcnQkcGFydHkNCmNvcnJfcGFydCRlcXVhbGl0eT1lcXUNCg0KDQpjb21wPC1jb3JyX3BhcnRbYygicmF0aW5nIiwiZXF1YWxpdHkiKV0NCg0KcGFydHlfc2VudGltZW50X2NvcnI8LWNvcihjb21wJHJhdGluZywgY29tcCRlcXVhbGl0eSwgbWV0aG9kID0gYygicGVhcnNvbiIpLCANCiAgICB1c2UgPSAiY29tcGxldGUub2JzIikNCmBgYA0KDQoNCmBgYHtyfQ0KbGV4X2NvcnI8LXBhcmxfcmVzW2MoImxzZCIsImFmaW5uIiwidmFkZXIiKV0NCg0KI25vcm1hbGlzZSB0aGUgcmF0aW5ncyB0byBwb3NpdGl2ZSBvciBuZWdhdGl2ZQ0KbGV4X2NvcnJbbGV4X2NvcnI+MF0gPC0gMQ0KbGV4X2NvcnJbbGV4X2NvcnI8PTBdIDwtIC0xDQogDQojQ2hvb3NlIG9uZSByYXRpbmcgZm9yIGVhY2ggZW50cnkgcGVyIG1ham9yaXR5IHZvdGUgDQpsZXhfY29yciRzdW1zPXJvd1N1bXMobGV4X2NvcnIpDQoNCmxleF9jb3JyW2xleF9jb3JyPjBdIDwtIDENCmxleF9jb3JyW2xleF9jb3JyPD0wXSA8LSAtMQ0KDQoNCmxleGljb25fc2VudGltZW50X2NvcnI8LWNvcihwYXJsX3JlcyRyYXRpbmcsIGxleF9jb3JyJHN1bXMsIG1ldGhvZCA9IGMoInBlYXJzb24iKSwgDQogICAgdXNlID0gImNvbXBsZXRlLm9icyIpDQoNCmBgYA0K</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIkNvcnJlbGF0aW9uIFBhcmxWb3RlIg0Kb3V0cHV0OiBodG1sX25vdGVib29rDQotLS0NClRoZSBOb3RlYm9vayBjYWxjdWxhdGVzIHRoZSBjb3JyZWxhdGlvbiBiZXR3ZWVuIHRoZSBQYXJ0eSBBZmZpbGlhdGlvbiBvZiB0aGUgc3BlYWtlciBhbmQgdGhlIFBhcnR5IGJyaW5naW5nIHRoZSBtb3Rpb24gaW4gdGhlIFBhcmxWb3RlIENvcnB1cyBhbmQgY29tcGFyZXMgdGhpcyB0byB0aGUgY29ycmVsYXRpb24gYmV0d2VlbiB0aGUgcHJlZGljdGVkIHZhbHVlcyBvZiB0aGUgbGV4aWNhIGFuZCB0aGUgZ29sZCBsYWJlbHMNCmBgYHtyfQ0KbGlicmFyeShkcGx5cikNCmBgYA0KDQoNCk1ha2UgYSBDb3JwdXMgd2hpY2ggaW5jbHVkZXMgdGhlIHBhcnR5IGFmZmlsaWF0aW9uLiANCmBgYHtyfQ0KI2xvYWQgY29ycHVzIGRhdGEgZnJvbSBsb2NhbCBkaXJlY3RvcnkNClBhcmxWb3RlX2NvbmNhdCA8LSByZWFkLmNzdigifi9TdHVkaXVtLzMgU2VtZXN0ZXIvUE0vQ29ycG9yYS9QYXJsVm90ZV9jb25jYXQuY3N2IikNCmBgYA0KDQpgYGB7cn0NCiNvbmx5IHVzZSByZWxldmFudCBjb2x1bW5zIGFuZCB0aHJvdyBvdXQgZW50cmllcyB3aXRoIG5vbiBhc2NpaSBjaGFyYWN0ZXJzDQpwYXJsX3ZvdGU8LSBzdWJzZXQoUGFybFZvdGVfY29uY2F0LCBzZWxlY3QgPSBjKCJtb3Rpb25fcGFydHkiLCJwYXJ0eSIsInNwZWVjaCIsInZvdGUiKSkNCg0KcGFybF92b3RlIDwtcGFybF92b3RlW3doaWNoKCFncmVwbCgiW15ceDAxLVx4N0ZdKyIscGFybF92b3RlJHNwZWVjaCkpLF0NCg0KI09ubHkgY2hvb3NlIHRoZSB0d28gYmlnZ2VzdCBwYXJ0aWVzIHRvIG1ha2UgY29tcGFyaXNvbiBlYXNpZXINCnBhcmxfdm90ZTwtc3Vic2V0KHBhcmxfdm90ZSwgbW90aW9uX3BhcnR5PT0nbGFib3VyJ3xtb3Rpb25fcGFydHk9PSJjb25zZXJ2YXRpdmUiKQ0KDQpwYXJsX3ZvdGU8LXN1YnNldChwYXJsX3ZvdGUsIHBhcnR5PT0nbGFib3VyJ3xwYXJ0eT09ImNvbnNlcnZhdGl2ZSIpDQoNCg0KI1JlbmFtZSBjb2x1bW5zIHRvIHN0YW5kYXJkIGNvbHVtbiBuYW1lDQpwYXJsX3ZvdGU8LXBhcmxfdm90ZSAlPiUgDQogcmVuYW1lKA0KICAgIHRleHQgPSBzcGVlY2gsDQogICAgcmF0aW5nID0gdm90ZSkNCg0KI2NoYW5nZSB0aGUgbmVnYXRpdmUgcmF0aWduIHRvIC0xIHRvIGJlIGNvbnNpc3RlbnQgDQpwYXJsX3ZvdGUkcmF0aW5nW3Bhcmxfdm90ZSRyYXRpbmcgPT0gMF0gPC0gLTENCg0KDQojc2FtcGxlIDUwMCBwb3NpdGl2ZSBhbmQgbmVnYXRpdmUgZXhhbXBsZXMNCnJlZF9wYXJsX3ZvdGUgPC0gZGF0YS5mcmFtZSh0ZXh0PWNoYXJhY3RlcigpLA0KICAgICAgICAgICAgICAgICByYXRpbmc9aW50ZWdlcigpLCANCiAgICAgICAgICAgICAgICAgc3RyaW5nc0FzRmFjdG9ycz1GQUxTRSkgDQoNCmhvbGQ8LSBzdWJzZXQocGFybF92b3RlLCByYXRpbmcgPT0gLTEpDQoNCnJlZF9wYXJsX3ZvdGUgPC0gcmJpbmQocmVkX3Bhcmxfdm90ZSwgaG9sZFtzYW1wbGUobnJvdyhob2xkKSwgNTAwKSwgXSkNCg0KaG9sZDwtIHN1YnNldChwYXJsX3ZvdGUsIHJhdGluZyA9PSAxKQ0KDQpyZWRfcGFybF92b3RlIDwtIHJiaW5kKHJlZF9wYXJsX3ZvdGUsIGhvbGRbc2FtcGxlKG5yb3coaG9sZCksIDUwMCksIF0pDQoNCg0KI2FkZCBJRCBjb2x1bW4NCnJlZF9wYXJsX3ZvdGUkaWQgPC0gMTpucm93KHJlZF9wYXJsX3ZvdGUpIA0KcmVkX3Bhcmxfdm90ZTwtcmVkX3Bhcmxfdm90ZVssYyg1LDEsMiwzLDQpXQ0KDQpgYGANCg0KYGBge3J9DQojc2F2ZSBpZiBuZWVkZWQNCiNzYXZlUkRTKHJlZF9wYXJsX3ZvdGUsIGZpbGUgPSAiY29ycl9wYXJ0LnJkcyIpDQpgYGANCg0KDQpSZXN1bHRzIG9mIHRoaXMgY29ycHVzDQpgYGB7cn0NCnBhcmxfcmVzPC0gcmVhZC5jc3YoIi4uL3Jlc3VsdHMvc2VudGltZW50X3Njb3Jlcy9wYXJsdm90ZV9jb3JyX25vcm0xLmNzdiIpDQpgYGANCg0KQ29ycmVsYXRpb24gYmV0d2VlbiBwYXJ0eSBhbmQgZ29sZCBsYWJlbA0KYGBge3J9DQoNCmNvcnJfcGFydDwtcGFybF9yZXNbYygibW90aW9uX3BhcnR5IiwicGFydHkiLCJyYXRpbmciKV0NCg0KI0NoZWNrIGlmIHRoZSBzcGVha2VyIGJlbG9uZ3MgdG8gdGhlIHBhcnR5IHRoYXQgYnJvdWdodCB1cCB0aGUgbW90aW9uDQplcXU8LWNvcnJfcGFydCRtb3Rpb25fcGFydHk9PWNvcnJfcGFydCRwYXJ0eQ0KY29ycl9wYXJ0JGVxdWFsaXR5PWVxdQ0KDQoNCmNvbXA8LWNvcnJfcGFydFtjKCJyYXRpbmciLCJlcXVhbGl0eSIpXQ0KDQpwYXJ0eV9zZW50aW1lbnRfY29ycjwtY29yKGNvbXAkcmF0aW5nLCBjb21wJGVxdWFsaXR5LCBtZXRob2QgPSBjKCJwZWFyc29uIiksIA0KICAgIHVzZSA9ICJjb21wbGV0ZS5vYnMiKQ0KYGBgDQoNCg0KYGBge3J9DQpsZXhfY29ycjwtcGFybF9yZXNbYygibHNkIiwiYWZpbm4iLCJ2YWRlciIpXQ0KDQojbm9ybWFsaXNlIHRoZSByYXRpbmdzIHRvIHBvc2l0aXZlIG9yIG5lZ2F0aXZlDQpsZXhfY29ycltsZXhfY29ycj4wXSA8LSAxDQpsZXhfY29ycltsZXhfY29ycjw9MF0gPC0gLTENCiANCiNDaG9vc2Ugb25lIHJhdGluZyBmb3IgZWFjaCBlbnRyeSBwZXIgbWFqb3JpdHkgdm90ZSANCmxleF9jb3JyJHN1bXM9cm93U3VtcyhsZXhfY29ycikNCg0KbGV4X2NvcnJbbGV4X2NvcnI+MF0gPC0gMQ0KbGV4X2NvcnJbbGV4X2NvcnI8PTBdIDwtIC0xDQoNCg0KbGV4aWNvbl9zZW50aW1lbnRfY29ycjwtY29yKHBhcmxfcmVzJHJhdGluZywgbGV4X2NvcnIkc3VtcywgbWV0aG9kID0gYygicGVhcnNvbiIpLCANCiAgICB1c2UgPSAiY29tcGxldGUub2JzIikNCg0KYGBgDQo=</div>
 
 
 

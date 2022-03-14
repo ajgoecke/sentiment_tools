@@ -10,6 +10,7 @@ library(dplyr)
 
 Make a Corpus which includes the party affiliation. 
 ```{r}
+#load corpus data from local directory
 ParlVote_concat <- read.csv("~/Studium/3 Semester/PM/Corpora/ParlVote_concat.csv")
 ```
 
@@ -63,7 +64,7 @@ red_parl_vote<-red_parl_vote[,c(5,1,2,3,4)]
 
 Results of this corpus
 ```{r}
-parl_res<- read.csv("~/Studium/3 Semester/PM/Datasets/parlvote_corr_norm1.csv")
+parl_res<- read.csv("../results/sentiment_scores/parlvote_corr_norm1.csv")
 ```
 
 Correlation between party and gold label

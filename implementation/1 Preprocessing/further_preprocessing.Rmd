@@ -13,7 +13,7 @@ library(textstem)
 ```{r}
 #Load the basic pre-processed corpora
 
-setwd("~/Studium/3 Semester/PM/Datasets/Baseline")
+setwd("../datasets/baseline/")
 
 twitter <- readRDS("twitterbin_config_base.rds")
 amazon <- readRDS("ama_config_base.rds")
@@ -113,36 +113,36 @@ Get the specific stopword lists
 ```{r}
 #Corpus and lexica specific most used words
 
-amazon_afinn_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/amazon_afinn_topn.csv")
+amazon_afinn_topn <- read.csv("../results/word_counts/amazon_afinn_topn.csv")
 
-amazon_vader_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/amazon_vader_topn.csv")
+amazon_vader_topn <- read.csv("../results/word_counts/amazon_vader_topn.csv")
 
-amazon_lsd_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/amazon_lsd_topn.csv")
+amazon_lsd_topn <- read.csv("../results/word_counts/amazon_lsd_topn.csv")
 
-parlvote_afinn_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/parlvote_afinn_topn.csv")
+parlvote_afinn_topn <- read.csv("../results/word_counts/parlvote_afinn_topn.csv")
 
-parlvote_vader_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/parlvote_vader_topn.csv")
+parlvote_vader_topn <- read.csv("../results/word_counts/parlvote_vader_topn.csv")
 
-parlvote_lsd_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/parlvote_lsd_topn.csv")
+parlvote_lsd_topn <- read.csv("../results/word_counts/parlvote_lsd_topn.csv")
 
-reviews_afinn_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/reviews_afinn_topn.csv")
+reviews_afinn_topn <- read.csv("../results/word_counts/reviews_afinn_topn.csv")
 
-reviews_vader_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/reviews_vader_topn.csv")
+reviews_vader_topn <- read.csv("../results/word_counts/reviews_vader_topn.csv")
 
-reviews_lsd_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/reviews_lsd_topn.csv")
+reviews_lsd_topn <- read.csv("../results/word_counts/reviews_lsd_topn.csv")
 
-twitter_afinn_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/twitter_afinn_topn.csv")
+twitter_afinn_topn <- read.csv("../results/word_counts/twitter_afinn_topn.csv")
 
-twitter_vader_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/twitter_vader_topn.csv")
+twitter_vader_topn <- read.csv("../results/word_counts/twitter_vader_topn.csv")
 
-twitter_lsd_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/twitter_lsd_topn.csv")
+twitter_lsd_topn <- read.csv("../results/word_counts/twitter_lsd_topn.csv")
 
 
-fin_afinn_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/finance_afinn_topn.csv")
+fin_afinn_topn <- read.csv("../results/word_counts/finance_afinn_topn.csv")
 
-fin_vader_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_data/finance_vader_topn.csv")
+fin_vader_topn <- read.csv("../results/word_counts/finance_vader_topn.csv")
 
-fin_lsd_topn <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/word_counts/finance_lsd_topn.csv")
+fin_lsd_topn <- read.csv("../results/word_counts/finance_lsd_topn.csv")
 
 
 ```
@@ -212,5 +212,4 @@ stopwords_parl<-unlist(stopwords_parl)
 stopwords_fin<-get_corpus_top_list(fin_vader_topn,fin_afinn_topn,fin_lsd_topn)
 stopwords_fin<-unlist(stopwords_fin)
 ```
-
 
