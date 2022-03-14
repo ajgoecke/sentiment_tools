@@ -1,9 +1,9 @@
 ---
-title: "R Notebook"
+title: "Binary Evaluation"
 output: html_notebook
 ---
 
-The notebook calculates the Accuracy and F1 score for the binary test condition. It also asses wether the performance differences are statistically significant
+The notebook calculates the Accuracy and F1 score for the binary test condition. It also asses whether the performance differences are statistically significant
 
 ```{r}
 library(caret) 
@@ -14,17 +14,18 @@ library (janitor)
 
 
 ```{r}
-#Load Data
-ama<- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_scores/amazon_sent_norm1.csv")
+#Load Scores of the Lexica
 
-parl<- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_scores/parlvote_sent_norm1.csv")
+ama<- read.csv("../results/sentiment_scores/amazon_sent_norm1.csv")
+
+parl<- read.csv("../results/sentiment_scores/parlvote_sent_norm1.csv")
 
 
-rev<- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_scores/reviews_sent_norm1.csv")
+rev<- read.csv("../results/sentiment_scores/reviews_sent_norm1.csv")
 
-twitter <-read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_scores/twitter_bin_norm1.csv")
+twitter <-read.csv("../results/sentiment_scores/twitter_bin_norm1.csv")
 
-fin <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_scores/finance_bin_norm1.csv")
+fin <- read.csv("../results/sentiment_scores/finance_bin_norm1.csv")
 ```
 
 

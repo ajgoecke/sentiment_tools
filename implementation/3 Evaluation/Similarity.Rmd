@@ -13,16 +13,18 @@ library(lsa)
 ```{r}
 #Read in Data 
 
+ama<- read.csv("../results/sentiment_scores/amazon_sent_norm1.csv")
 
-ama<- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_data/amazon_sentiment_norm1.csv")
 
-parl<-parlvote_sentiment_norm <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_data/parlvote_sentiment_norm1.csv")
 
-rev<-reviews_sentiment_norm <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_data/reviews_sentiment_norm_norm1.csv")
 
-twitter<-twitter_sentiment_norm <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_data/twitter_sentiment_norm1.csv")
+parl<-parlvote_sentiment_norm <- read.csv("../results/sentiment_scores/parlvote_sent_norm1.csv")
 
-fin <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_scores/finance_sent_norm1.csv")
+rev<-reviews_sentiment_norm <- read.csv("../results/sentiment_scores/reviews_sent_norm1.csv")
+
+twitter<-twitter_sentiment_norm <- read.csv("../results/sentiment_scores/twitter_sent_norm1.csv")
+
+fin <- read.csv("../results/sentiment_scores/finance_sent_norm1.csv")
 
 ```
 

@@ -14,23 +14,21 @@ library (janitor)
 
 ```{r}
 #Read in Data 
+ama<- read.csv("../results/sentiment_scores/amazon_config3_sent_norm1.csv")
 
-ama<- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_scores/amazon_config3_sent_norm1.csv")
+rev<- read.csv("../results/sentiment_scores/reviews_config3_sent_norm1.csv")
 
+twitter <-read.csv("../results/sentiment_scores/twitter_config3_sent_norm1.csv")
 
-rev<- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_scores/reviews_config3_sent_norm1.csv")
-
-twitter <-read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_scores/twitter_config3_sent_norm1.csv")
-
-fin <- read.csv("~/Studium/3 Semester/PM/sentiment_tools-main/sentiment_tools-main/implementation/datasets/sentiment_scores/finance_config3_sent_norm1.csv")
+fin <- read.csv("../results/sentiment_scores/finance_config3_sent_norm1.csv")
 
 ```
 
 
 ```{r}
-#The function calculates the choosen metrics for the dataframe
+#The function calculates the chosen metrics for the dataframe
 #Args: Dataframe, 
-#boolean flags for choosen metric
+#boolean flags for chosen metric
 #threshold: an int indicating the cutoff point for neutral values
 #Out: A list of results:
 #1: The confusion matrix and additional information
@@ -363,4 +361,3 @@ summary(res.aov)
 print("-------------Tukey-------------")
 TukeyHSD(res.aov)
 ```
-
